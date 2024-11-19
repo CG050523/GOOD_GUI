@@ -15,7 +15,7 @@ simple as usual.
 ```bash
 mkdir build
 cd build && qmake ../src/Hello.pro
-make
+make -j8
 ./Hello
 ```
 
