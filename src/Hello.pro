@@ -22,7 +22,8 @@ HEADERS += \
     common/types.h \
     core/config.h \
     core/ftps.h \
-    hello.h
+    hello.h \
+    win/unistd.h
 
 FORMS += \
     hello.ui
@@ -32,15 +33,12 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
+# Add yaml lib.
+
+
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lyaml-cpp
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lyaml-cppd
 else:unix: LIBS += -L$$PWD/lib/ -lyaml-cpp
 
 INCLUDEPATH += $$PWD/lib/include
 DEPENDPATH += $$PWD/lib/include
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libyaml-cpp.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libyaml-cppd.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/yaml-cpp.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/yaml-cppd.lib
-else:unix: PRE_TARGETDEPS += $$PWD/lib/libyaml-cpp.a

@@ -17,7 +17,7 @@
 #include "ftps.h"
 
 #ifdef _WIN32 /* for Windows */
-#    include "yaml-cpp\yaml.h"
+#    include "yaml-cpp/yaml.h"
 #else /* for Linux or Mac */
 #    include <yaml-cpp/yaml.h>
 #endif

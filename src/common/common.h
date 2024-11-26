@@ -11,6 +11,7 @@
 #define COMMON_H
 
 #include <iostream>
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <iomanip>

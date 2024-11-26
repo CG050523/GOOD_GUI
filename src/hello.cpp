@@ -4,6 +4,11 @@
 
 hello::hello(QWidget* parent) : QDialog(parent), ui(new Ui::hello) {
     ui->setupUi(this);
+    //    QDialog *dialog=new QDialog(this);
+    //    dialog->setWindowTitle("new window!");
+    //    dialog->setModal(true);
+    //    dialog->show();
+    this->setWindowTitle("GOOD_GUI");
     ui->time_modal_setting->addItem("year,month,day,ndays");
     ui->time_modal_setting->addItem("year,doy,,ndays");
     ui->time_modal_setting->addItem("GPSweek,dow,,ndays");
@@ -214,14 +219,13 @@ void hello::init_exist_list() {
 }
 
 void hello::on_pushButton_clicked() {
-    QString file_name = QFileDialog::getOpenFileName(this, tr("配置文件选择"), "/home", tr("配置文件(*.yaml)"));
+    QString file_name = QFileDialog::getOpenFileName(this, tr("配置文件选择"), QDir::currentPath(), tr("配置文件(*.yaml)"));
     if (!file_name.isEmpty()) {
         this->Location = file_name.toStdString();
         ui->Location_Label->setText(file_name);
         QFileInfo main_dir(file_name);
         if (main_dir.exists()) {
             this->location_main_dir = main_dir.absolutePath().toStdString();
-            //            qDebug() << QString::fromStdString(location_main_dir);
         }
     }
 }
@@ -232,42 +236,41 @@ bool hello::Start_Download(const std::string& Loc) {
 }
 
 void hello::set_dir() {
+#ifdef _WIN32
     this->prop.maindir = ui->main_dir_location->text().toStdString();
-    this->prop.obsdir = ui->main_dir_location->text().toStdString() + "/obs";
-    this->prop.navdir = ui->main_dir_location->text().toStdString() + "/nav";
-    this->prop.orbdir = ui->main_dir_location->text().toStdString() + "/orb";
-    this->prop.clkdir = ui->main_dir_location->text().toStdString() + "/clk";
-    this->prop.eopdir = ui->main_dir_location->text().toStdString() + "/eop";
-    this->prop.obxdir = ui->main_dir_location->text().toStdString() + "/obx";
-    this->prop.biadir = ui->main_dir_location->text().toStdString() + "/bia";
-    this->prop.snxdir = ui->main_dir_location->text().toStdString() + "/snx";
-    this->prop.iondir = ui->main_dir_location->text().toStdString() + "/ion";
-    this->prop.ztddir = ui->main_dir_location->text().toStdString() + "/ztd";
-    this->prop.tbldir = ui->main_dir_location->text().toStdString() + "/tbl";
-    this->prop.logdir = ui->main_dir_location->text().toStdString() + "/log";
-    this->prop.logfil = prop.logdir + "/log.txt";
+    size_t pos = this->prop.maindir.find("/");
+    while (pos != std::string::npos) {
+        this->prop.maindir.replace(pos, 1, "\\");
+        pos = this->prop.maindir.find("/");
+    }
+#else
+#endif
+    this->prop.obsdir = this->prop.maindir + FILEPATHSEP + "obs";
+    this->prop.navdir = this->prop.maindir + FILEPATHSEP + "nav";
+    this->prop.orbdir = this->prop.maindir + FILEPATHSEP + "orb";
+    this->prop.clkdir = this->prop.maindir + FILEPATHSEP + "clk";
+    this->prop.eopdir = this->prop.maindir + FILEPATHSEP + "eop";
+    this->prop.obxdir = this->prop.maindir + FILEPATHSEP + "obx";
+    this->prop.biadir = this->prop.maindir + FILEPATHSEP + "bia";
+    this->prop.snxdir = this->prop.maindir + FILEPATHSEP + "snx";
+    this->prop.iondir = this->prop.maindir + FILEPATHSEP + "ion";
+    this->prop.ztddir = this->prop.maindir + FILEPATHSEP + "ztd";
+    this->prop.tbldir = this->prop.maindir + FILEPATHSEP + "tbl";
+    this->prop.logdir = this->prop.maindir + FILEPATHSEP + "log";
+    this->prop.logfil = this->prop.logdir + FILEPATHSEP + "log.txt";
     // third-party location remains specified
 }
 
 void hello::on_config_download_clicked() {
-    if (this->Start_Download(this->Location)) {
-        //        QDialog msg(this);
-        //        msg.setModal(true);
-        //        QLabel label(&msg);
-        //        label.setText("Done!");
-        //        msg.show();
-    }
+    this->Start_Download(this->Location);
 }
 
 void hello::on_main_dir_check_clicked() {
     QString dir_name = QFileDialog::getExistingDirectory(this, tr("主目录选择"), QDir::currentPath());
     if (!dir_name.isEmpty()) {
         this->location_main_dir = dir_name.toStdString();
-        //        ui->Location_Label->setText(dir_name);
         ui->main_dir_location->setText(dir_name);
     }
-    //    this->location_main_dir = ui->main_dir_location->text().toStdString();
-    //    qDebug() << QString::fromStdString(this->location_main_dir);
 }
 
 void hello::on_time_modal_setting_activated(const QString& arg1) {
@@ -341,12 +344,11 @@ void hello::on_obs_pro_site_setting_activated(const QString& arg1) {
 
 void hello::on_obs_site_setting_activated(int index) {
     if (ui->obs_site_setting->itemText(index) == "all") {
-        this->fpop.obslist = this->location_main_dir + "/" + ui->obs_site_setting->currentText().toStdString();
+        this->fpop.obslist = this->location_main_dir + FILEPATHSEP + ui->obs_site_setting->currentText().toStdString();
     } else if (ui->obs_site_setting->itemText(index) == "...") {
         QString site_list_loc = QFileDialog::getOpenFileName(
             this, tr("obs站点文件选择"), QString::fromStdString(this->location_main_dir), tr("obs站点文件(*.list)"));
         if (!site_list_loc.isEmpty()) {
-            //            qDebug() << site_list_loc;
             this->fpop.obslist = site_list_loc.toStdString();
         }
     }
@@ -387,7 +389,6 @@ void hello::on_nav_site_choose_button_clicked() {
     QString site_list_loc = QFileDialog::getOpenFileName(
         this, tr("nav站点文件选择"), QString::fromStdString(this->location_main_dir), tr("nav站点文件(*.list)"));
     if (!site_list_loc.isEmpty()) {
-        //            qDebug() << site_list_loc;
         ui->nav_site_list_location->setText(site_list_loc);
         this->fpop.navlist = site_list_loc.toStdString();
     }
@@ -409,13 +410,10 @@ void hello::on_orb_clk_pro_site_setting_activated(int index) {
             ui->orb_clk_site_list->setText(ui->orb_clk_site_list->text() + "+" +
                                            this->orb_clk_process_site_list[index - 1]);
         }
-        ui->orb_clk_start_time->setEnabled(false);
-        ui->orb_clk_consecutive_time->setEnabled(false);
+
     } else {
         ui->orb_clk_site_list->setText(this->orb_clk_process_site_list[index - 1]);
         this->orb_clk_add_count = 0;
-        ui->orb_clk_start_time->setEnabled(true);
-        ui->orb_clk_consecutive_time->setEnabled(true);
     }
 }
 
@@ -452,18 +450,6 @@ void hello::on_dsb_pro_site_setting_activated(int index) {
     this->fpop.dsbfrom = ui->dsb_pro_site_setting->itemText(index).toStdString();
 }
 
-void hello::on_osb_download_setting_activated(int index) { this->fpop.getosb = index; }
-
-void hello::on_osb_pro_site_setting_activated(int index) {
-    this->fpop.osbfrom = ui->osb_pro_site_setting->itemText(index).toStdString();
-}
-
-void hello::on_snx_download_setting_activated(int index) { this->fpop.getsnx = index; }
-
-void hello::on_snx_name_length_setting_activated(int index) { this->fpop.l2s4snx = index; }
-
-void hello::on_roti_download_setting_activated(int index) { this->fpop.getroti = index; }
-
 void hello::on_ion_download_setting_activated(int index) { this->fpop.getion = index; }
 
 void hello::on_ion_pro_site_setting_activated(int index) {
@@ -487,8 +473,6 @@ void hello::on_ion_clear_clicked() {
 }
 
 void hello::on_ion_name_length_setting_activated(int index) { this->fpop.l2s4ion = index; }
-
-void hello::on_trop_download_setting_activated(int index) { this->fpop.gettrp = index; }
 
 void hello::on_trop_pro_site_setting_activated(const QString& arg1) {
     if (arg1 == "igs")
@@ -616,6 +600,7 @@ void hello::on_GUI_download_clicked() {
     /* setting done! */
 
     if (fpop.ftpdownloading) {
+        ui->download_info->setText("Downloading...");
         FtpUtil ftp;
         std::string obsdirmain = prop.obsdir;
         std::string navdirmain = prop.navdir;
@@ -700,12 +685,24 @@ void hello::on_GUI_download_clicked() {
     }
 }
 
+void hello::on_osb_download_setting_activated(int index) { this->fpop.getosb = index; }
+
+void hello::on_osb_pro_site_setting_activated(int index) {
+    this->fpop.osbfrom = ui->osb_pro_site_setting->itemText(index).toStdString();
+}
+
+void hello::on_snx_download_setting_activated(int index) { this->fpop.getsnx = index; }
+
+void hello::on_snx_name_length_setting_activated(int index) { this->fpop.l2s4snx = index; }
+
+void hello::on_roti_download_setting_activated(int index) { this->fpop.getroti = index; }
+
+void hello::on_trop_download_setting_activated(int index) { this->fpop.gettrp = index; }
+
 void hello::on_choose_thirdparty_dir_clicked() {
     QString dir_name = QFileDialog::getExistingDirectory(this, tr("第三方路径选择"), ui->main_dir_location->text());
     if (!dir_name.isEmpty()) {
         this->prop.dir3party = dir_name.toStdString();
-        //        this->location_main_dir = dir_name.toStdString();
-        //        ui->Location_Label->setText(dir_name);
         ui->third_party_dir->setText(dir_name);
     }
 }
