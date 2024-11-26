@@ -1,6 +1,6 @@
 ## GOOD_GUI
 
-基于GOOD, version 3.1（https://github.com/zhouforme0318/GAMPII-GOOD）开发的图形界面
+基于GOOD, version 3.1 (https://github.com/zhouforme0318/GAMPII-GOOD) 开发的图形界面
 
 使用Qt 5.15.3进行图形化版本的开发
 
