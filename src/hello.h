@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QLabel>
+#include <QThread>
 #include <string>
 
 #include "common/common.h"
@@ -21,7 +22,7 @@
 QT_BEGIN_NAMESPACE
 namespace Ui {
     class hello;
-}
+}  // namespace Ui
 QT_END_NAMESPACE
 
 class hello : public QDialog {
@@ -34,6 +35,8 @@ class hello : public QDialog {
     bool Start_Download(const std::string& Loc);
     ftpopt_t fpop;
     prcopt_t prop;
+    FtpUtil ftp;
+    bool check_if_down = false;
   private slots:
     void on_pushButton_clicked();
 
@@ -145,10 +148,14 @@ class hello : public QDialog {
     std::string Location;
     std::string location_main_dir;
     int time_modal = 1;
+
     void set_dir();
     void init_exist_list();
+    QThread* download_thread;
+    void thread_start();
 
   private:
     Ui::hello* ui;
 };
+
 #endif  // HELLO_H
