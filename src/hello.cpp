@@ -8,6 +8,10 @@ hello::hello(QWidget* parent) : QDialog(parent), ui(new Ui::hello) {
     //    dialog->setWindowTitle("new window!");
     //    dialog->setModal(true);
     //    dialog->show();
+
+    //    QtMaterialCheckBox* check = new QtMaterialCheckBox(this);
+    //    check->move(400, 10);
+
     this->setWindowTitle("GOOD_GUI");
     ui->time_modal_setting->addItem("year,month,day,ndays");
     ui->time_modal_setting->addItem("year,doy,,ndays");
@@ -17,12 +21,16 @@ hello::hello(QWidget* parent) : QDialog(parent), ui(new Ui::hello) {
     this->check_list.push_back("yes");
 
     ui->minus_add_day_setting->addItems(check_list);
+    ui->minus_add_day_setting->setCurrentText(check_list[1]);
 
     ui->merge_sp3_setting->addItems(check_list);
+    ui->merge_sp3_setting->setCurrentText(check_list[1]);
 
     ui->print_wget_log_setting->addItems(check_list);
+    ui->print_wget_log_setting->setCurrentText(check_list[1]);
 
     ui->ftp_download_setting->addItems(check_list);
+    ui->ftp_download_setting->setCurrentText(check_list[1]);
 
     ui->obs_download_setting->addItems(check_list);
 
@@ -219,7 +227,8 @@ void hello::init_exist_list() {
 }
 
 void hello::on_pushButton_clicked() {
-    QString file_name = QFileDialog::getOpenFileName(this, tr("配置文件选择"), QDir::currentPath(), tr("配置文件(*.yaml)"));
+    QString file_name =
+        QFileDialog::getOpenFileName(this, tr("配置文件选择"), QDir::currentPath(), tr("配置文件(*.yaml)"));
     if (!file_name.isEmpty()) {
         this->Location = file_name.toStdString();
         ui->Location_Label->setText(file_name);
@@ -231,19 +240,28 @@ void hello::on_pushButton_clicked() {
 }
 
 bool hello::Start_Download(const std::string& Loc) {
+#ifdef _WIN32
+    std::string tmp_loc = Loc;
+    size_t pos = tmp_loc.find("/");
+    while (pos != std::string::npos) {
+        tmp_loc.replace(pos, 1, "\\");
+        pos = tmp_loc.find("/");
+    }
+    Config::run(tmp_loc);
+#else
     Config::run(Loc);
+#endif
     return 1;
 }
 
 void hello::set_dir() {
-#ifdef _WIN32
     this->prop.maindir = ui->main_dir_location->text().toStdString();
+#ifdef _WIN32
     size_t pos = this->prop.maindir.find("/");
     while (pos != std::string::npos) {
         this->prop.maindir.replace(pos, 1, "\\");
         pos = this->prop.maindir.find("/");
     }
-#else
 #endif
     this->prop.obsdir = this->prop.maindir + FILEPATHSEP + "obs";
     this->prop.navdir = this->prop.maindir + FILEPATHSEP + "nav";
@@ -261,9 +279,7 @@ void hello::set_dir() {
     // third-party location remains specified
 }
 
-void hello::on_config_download_clicked() {
-    this->Start_Download(this->Location);
-}
+void hello::on_config_download_clicked() { this->Start_Download(this->Location); }
 
 void hello::on_main_dir_check_clicked() {
     QString dir_name = QFileDialog::getExistingDirectory(this, tr("主目录选择"), QDir::currentPath());
@@ -344,7 +360,17 @@ void hello::on_obs_pro_site_setting_activated(const QString& arg1) {
 
 void hello::on_obs_site_setting_activated(int index) {
     if (ui->obs_site_setting->itemText(index) == "all") {
+#ifdef _WIN32
+        std::string tmp_location_main_dir = this->location_main_dir;
+        size_t pos = tmp_location_main_dir.find("/");
+        while (pos != std::string::npos) {
+            tmp_location_main_dir.replace(pos, 1, "\\");
+            pos = tmp_location_main_dir.find("/");
+        }
+        this->fpop.obslist = tmp_location_main_dir + FILEPATHSEP + ui->obs_site_setting->currentText().toStdString();
+#else
         this->fpop.obslist = this->location_main_dir + FILEPATHSEP + ui->obs_site_setting->currentText().toStdString();
+#endif
     } else if (ui->obs_site_setting->itemText(index) == "...") {
         QString site_list_loc = QFileDialog::getOpenFileName(
             this, tr("obs站点文件选择"), QString::fromStdString(this->location_main_dir), tr("obs站点文件(*.list)"));
@@ -496,6 +522,15 @@ void hello::on_trop_name_length_setting_activated(int index) { this->fpop.l2s4tr
 void hello::on_atx_download_setting_activated(int index) { this->fpop.getatx = index; }
 
 void hello::on_GUI_download_clicked() {
+    if (!this->download_thread) {
+        this->download_thread = QThread::create([this]() { this->thread_start(); });
+        connect(this->download_thread, &QThread::finished, this->download_thread, &QThread::deleteLater);
+        this->download_thread->start();
+    }
+}
+
+void hello::thread_start() {
+    this->check_if_down = true;
     set_dir();
     int j = this->time_modal;
     if (j == 1) /* year, month, day */
@@ -601,7 +636,7 @@ void hello::on_GUI_download_clicked() {
 
     if (fpop.ftpdownloading) {
         ui->download_info->setText("Downloading...");
-        FtpUtil ftp;
+
         std::string obsdirmain = prop.obsdir;
         std::string navdirmain = prop.navdir;
         std::string iondirmain = prop.iondir;
@@ -676,12 +711,12 @@ void hello::on_GUI_download_clicked() {
                     std::system(cmd.c_str());
                 }
             }
+
             /* the main entry of FTP downloader */
             ftp.FtpDownload(&prop, &fpop);
 
             prop.ts = GTime::TimeAdd(prop.ts, 86400.0);
         }
-        ui->download_info->setText("Done!");
     }
 }
 
@@ -703,6 +738,13 @@ void hello::on_choose_thirdparty_dir_clicked() {
     QString dir_name = QFileDialog::getExistingDirectory(this, tr("第三方路径选择"), ui->main_dir_location->text());
     if (!dir_name.isEmpty()) {
         this->prop.dir3party = dir_name.toStdString();
+#ifdef _WIN32
+        size_t pos = this->prop.dir3party.find("/");
+        while (pos != std::string::npos) {
+            this->prop.dir3party.replace(pos, 1, "\\");
+            pos = this->prop.dir3party.find("/");
+        }
+#endif
         ui->third_party_dir->setText(dir_name);
     }
 }
