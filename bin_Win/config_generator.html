@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAMPII-GOOD Configuration Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h1,
+        h2 {
+            color: #2c3e50;
+        }
+
+        .hidden-section {
+            display: none;
+        }
+
+        .toggle-btn {
+            margin-bottom: 10px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+
+        button {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #1a252f;
+        }
+
+        pre {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+
+        .comment {
+            color: #006600;
+        }
+
+        .sub-section {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .switch-label {
+            display: inline;
+            margin-left: 8px;
+        }
+
+        .hint {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        #copyBtn {
+            background-color: #27ae60;
+            margin-left: 10px;
+        }
+
+        #copyBtn:hover {
+            background-color: #219653;
+        }
+
+        .button-container {
+            display: flex;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .success-message {
+            background-color: #27ae60;
+        }
+
+        .error-message {
+            background-color: #e74c3c;
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .input-with-button input {
+            flex-grow: 1;
+        }
+
+        .browse-btn {
+            margin-top: 0;
+            white-space: nowrap;
+            background-color: #4a6b8a;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .modal-content {
+            background-color: white;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        }
+
+        .modal-header {
+            padding: 15px;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .close {
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 15px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .current-path {
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .file-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .directory {
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .modal-footer {
+            padding: 15px;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .download-btn {
+            background-color: #3498db;
+            margin-left: 10px;
+        }
+
+        .download-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>GAMPII-GOOD Configuration Generator (Created By SheepLie)</h1>
+        <div class="section">
+            <h2>Directory Settings</h2>
+            <div class="field">
+                <div class="input-with-button">
+		    <!-- You can set the default maindir here in value attribute. -->
+                    <input type="text" id="mainDir" value="E:\bin_Win">
+                    <button type="button" id="browseBtn" class="browse-btn">Browse...</button>
+                </div>
+                <div class="hint">The root/main directory of GNSS observations and products</div>
+            </div>
+            <button type="button" id="toggleDirSettings" class="toggle-btn">Show Advanced Directory Settings</button>
+            <div id="advancedDirSettings" class="hidden-section">
+                <div class="field">
+                    <label for="obsDir">Observation Directory:</label>
+                    <input type="text" id="obsDir" value="obs">
+                    <div class="hint">The sub-directory of RINEX format observation files</div>
+                </div>
+                <div class="field">
+                    <label for="navDir">Navigation Directory:</label>
+                    <input type="text" id="navDir" value="nav">
+                    <div class="hint">The sub-directory of RINEX format broadcast ephemeris files</div>
+                </div>
+                <div class="field">
+                    <label for="orbDir">Orbit Directory:</label>
+                    <input type="text" id="orbDir" value="orb">
+                    <div class="hint">The sub-directory of SP3 format precise ephemeris files</div>
+                </div>
+                <div class="field">
+                    <label for="clkDir">Clock Directory:</label>
+                    <input type="text" id="clkDir" value="clk">
+                    <div class="hint">The sub-directory of RINEX format precise clock files</div>
+                </div>
+                <div class="field">
+                    <label for="eopDir">EOP Directory:</label>
+                    <input type="text" id="eopDir" value="eop">
+                    <div class="hint">The sub-directory of earth rotation/orientation parameter (EOP) files</div>
+                </div>
+                <div class="field">
+                    <label for="obxDir">ORBEX Directory:</label>
+                    <input type="text" id="obxDir" value="obx">
+                    <div class="hint">The sub-directory of MGEX final/rapid and/or CNES real-time ORBEX files</div>
+                </div>
+                <div class="field">
+                    <label for="biaDir">Bias Directory:</label>
+                    <input type="text" id="biaDir" value="bia">
+                    <div class="hint">The sub-directory of CODE/MGEX differential code/signal bias files</div>
+                </div>
+                <div class="field">
+                    <label for="snxDir">SINEX Directory:</label>
+                    <input type="text" id="snxDir" value="snx">
+                    <div class="hint">The sub-directory of SINEX format IGS weekly solution files</div>
+                </div>
+                <div class="field">
+                    <label for="ionDir">Ionosphere Directory:</label>
+                    <input type="text" id="ionDir" value="ion">
+                    <div class="hint">The sub-directory of CODE/IGS global ionosphere map (GIM) files</div>
+                </div>
+                <div class="field">
+                    <label for="ztdDir">Troposphere Directory:</label>
+                    <input type="text" id="ztdDir" value="ztd">
+                    <div class="hint">The sub-directory of CODE/IGS tropospheric product files</div>
+                </div>
+                <div class="field">
+                    <label for="tblDir">Table Directory:</label>
+                    <input type="text" id="tblDir" value="tbl">
+                    <div class="hint">The sub-directory of table files (i.e., ANTEX, ocean tide loading files, etc.)
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="logDir">Log Directory:</label>
+                    <input type="text" id="logDir" value="log">
+                    <div class="hint">The sub-directory of log file</div>
+                </div>
+                <div class="field">
+                    <label for="3partyDir">Third-party Directory:</label>
+                    <input type="text" id="3partyDir" value="thirdparty">
+                    <div class="hint">The sub-directory where third-party softwares are stored</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Time Settings</h2>
+                <div class="field">
+                    <label for="procTimeMode">Processing Time Mode:</label>
+                    <select id="procTimeMode">
+                        <option value="1">1: Year Month Day Ndays</option>
+                        <option value="2" selected>2: Year DOY Ndays</option>
+                        <option value="3">3: Week DOW Ndays</option>
+                    </select>
+                </div>
+                <div class="field" id="timeInputs">
+                    <div>
+                        <label for="year">Year:</label>
+                        <input type="number" id="year" value="2024">
+                    </div>
+                    <div>
+                        <label for="doy">DOY (Day of Year):</label>
+                        <input type="number" id="doy" value="1">
+                    </div>
+                    <div>
+                        <label for="ndays">Number of Days:</label>
+                        <input type="number" id="ndays" value="1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>FTP Download Settings</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="minusAdd1day" checked>
+                        <label class="switch-label" for="minusAdd1day">Add One Day Before/After</label>
+                    </div>
+                    <div class="hint">The setting of the day before and after the current day for precise satellite
+                        orbit
+                        and clock products downloading</div>
+                </div>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="merge_sp3files" checked>
+                        <label class="switch-label" for="merge_sp3files">Merge SP3 Files</label>
+                    </div>
+                    <div class="hint">To merge three consecutive sp3 files into one file</div>
+                </div>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="printInfoWget" checked>
+                        <label class="switch-label" for="printInfoWget">Print Wget Info</label>
+                    </div>
+                    <div class="hint">Printing the information generated by 'wget'</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>FTP Download Configuration</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="ftpActive" checked>
+                        <label class="switch-label" for="ftpActive">Enable FTP Downloading</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="ftpArch">FTP Archive:</label>
+                    <select id="ftpArch">
+                        <option value="cddis">CDDIS</option>
+                        <option value="ign">IGN</option>
+                        <option value="whu" selected>WHU</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Observation Data</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getObsActive">
+                        <label class="switch-label" for="getObsActive">Download Observation Data</label>
+                    </div>
+                </div>
+                <div id="obsOptions" class="sub-section">
+                    <div class="field">
+                        <label for="obsType">Observation Type:</label>
+                        <select id="obsType">
+                            <option value="daily" selected>Daily</option>
+                            <option value="hourly">Hourly</option>
+                            <option value="highrate">High Rate</option>
+                            <option value="30s">30s</option>
+                            <option value="5s">5s</option>
+                            <option value="1s">1s</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="obsFrom">Observation From:</label>
+                        <select id="obsFrom">
+                            <option value="igs">IGS</option>
+                            <option value="mgex" selected>MGEX</option>
+                            <option value="igm">IGS+MGEX</option>
+                            <option value="cut">CUT</option>
+                            <option value="hk">Hong Kong CORS</option>
+                            <option value="ngs">NGS/NOAA CORS</option>
+                            <option value="epn">EPN</option>
+                            <option value="pbo">PBO</option>
+                            <option value="chi">Centro Sismologico Nacional Chile</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="obsList">Observation List:</label>
+                        <input type="text" id="obsList" value="all">
+                        <div class="hint">'all' or site list file name</div>
+                    </div>
+                    <div class="field">
+                        <label for="sHH4obs">Start Hour:</label>
+                        <input type="text" id="sHH4obs" value="02">
+                    </div>
+                    <div class="field">
+                        <label for="nHH4obs">Consecutive Hours:</label>
+                        <input type="text" id="nHH4obs" value="24">
+                    </div>
+                    <div class="field">
+                        <label for="l2s4obs">Name Option:</label>
+                        <select id="l2s4obs">
+                            <option value="0">0: Long Name</option>
+                            <option value="1">1: Short Name</option>
+                            <option value="2">2: Long and Short Name</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Navigation Data</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getNavActive">
+                        <label class="switch-label" for="getNavActive">Download Navigation Data</label>
+                    </div>
+                </div>
+                <div id="navOptions" class="sub-section">
+                    <div class="field">
+                        <label for="navType">Navigation Type:</label>
+                        <select id="navType">
+                            <option value="daily" selected>Daily</option>
+                            <option value="hourly">Hourly</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="navSys">Navigation System:</label>
+                        <select id="navSys">
+                            <option value="gps">GPS</option>
+                            <option value="glo">GLONASS</option>
+                            <option value="bds">BDS</option>
+                            <option value="gal">Galileo</option>
+                            <option value="qzs">QZSS</option>
+                            <option value="irn">IRNSS/NavIC</option>
+                            <option value="mixed3" selected>Mixed RINEX 3.xx</option>
+                            <option value="mixed4">Mixed RINEX 4.xx</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="navFrom">Navigation From:</label>
+                        <select id="navFrom">
+                            <option value="igs" selected>IGS</option>
+                            <option value="dlr">DLR</option>
+                            <option value="ign">IGN</option>
+                            <option value="gop">GOP</option>
+                            <option value="wrd">WRD</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="navList">Navigation List:</label>
+                        <input type="text" id="navList" value="site_mgex.list">
+                    </div>
+                    <div class="field">
+                        <label for="sHH4nav">Start Hour:</label>
+                        <input type="text" id="sHH4nav" value="00">
+                    </div>
+                    <div class="field">
+                        <label for="nHH4nav">Consecutive Hours:</label>
+                        <input type="text" id="nHH4nav" value="24">
+                    </div>
+                    <div class="field">
+                        <label for="l2s4nav">Name Option:</label>
+                        <select id="l2s4nav">
+                            <option value="0">0: Long Name</option>
+                            <option value="1">1: Short Name</option>
+                            <option value="2" selected>2: Long and Short Name</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Orbit and Clock Data</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getOrbClkActive">
+                        <label class="switch-label" for="getOrbClkActive">Download Orbit and Clock Data</label>
+                    </div>
+                </div>
+                <div id="orbClkOptions" class="sub-section">
+                    <div class="field">
+                        <label for="ocFrom">Orbit/Clock From:</label>
+                        <input type="text" id="ocFrom" value="whu_m">
+                        <div class="hint">e.g. 'cod', 'emr', 'whu_m', 'all_m', etc.</div>
+                    </div>
+                    <div class="field">
+                        <label for="sHH4oc">Start Hour:</label>
+                        <input type="text" id="sHH4oc" value="01">
+                    </div>
+                    <div class="field">
+                        <label for="nHH4oc">Consecutive Sessions:</label>
+                        <input type="text" id="nHH4oc" value="2">
+                    </div>
+                    <div class="field">
+                        <label for="l2s4oc">Name Option:</label>
+                        <select id="l2s4oc">
+                            <option value="0">0: Long Name</option>
+                            <option value="1">1: Short Name</option>
+                            <option value="2" selected>2: Long and Short Name</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Earth Orientation Parameters</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getEopActive">
+                        <label class="switch-label" for="getEopActive">Download EOP Data</label>
+                    </div>
+                </div>
+                <div id="eopOptions" class="sub-section">
+                    <div class="field">
+                        <label for="eopFrom">EOP From:</label>
+                        <input type="text" id="eopFrom" value="igs">
+                        <div class="hint">e.g. 'cod', 'emr', 'igs', etc.</div>
+                    </div>
+                    <div class="field">
+                        <label for="sHH4eop">Start Hour:</label>
+                        <input type="text" id="sHH4eop" value="01">
+                    </div>
+                    <div class="field">
+                        <label for="nHH4eop">Consecutive Sessions:</label>
+                        <input type="text" id="nHH4eop" value="4">
+                    </div>
+                    <div class="field">
+                        <label for="l2s4eop">Name Option:</label>
+                        <select id="l2s4eop">
+                            <option value="0">0: Long Name</option>
+                            <option value="1">1: Short Name</option>
+                            <option value="2" selected>2: Long and Short Name</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>ORBEX Data</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getObxActive">
+                        <label class="switch-label" for="getObxActive">Download ORBEX Data</label>
+                    </div>
+                </div>
+                <div id="obxOptions" class="sub-section">
+                    <div class="field">
+                        <label for="obxFrom">ORBEX From:</label>
+                        <input type="text" id="obxFrom" value="all">
+                        <div class="hint">e.g. 'cod', 'gfz', 'all', etc.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Differential Code/Signal Bias</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getDsbActive">
+                        <label class="switch-label" for="getDsbActive">Download DSB Data</label>
+                    </div>
+                </div>
+                <div id="dsbOptions" class="sub-section">
+                    <div class="field">
+                        <label for="dsbFrom">DSB From:</label>
+                        <input type="text" id="dsbFrom" value="all">
+                        <div class="hint">e.g. 'cod', 'cas', 'all'</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Observable-specific Signal Bias</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getOsbActive">
+                        <label class="switch-label" for="getOsbActive">Download OSB Data</label>
+                    </div>
+                </div>
+                <div id="osbOptions" class="sub-section">
+                    <div class="field">
+                        <label for="osbFrom">OSB From:</label>
+                        <input type="text" id="osbFrom" value="cas">
+                        <div class="hint">e.g. 'cas', 'cod', 'all', etc.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>IGS Weekly SINEX</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getSnxActive" checked>
+                        <label class="switch-label" for="getSnxActive">Download SINEX Data</label>
+                    </div>
+                </div>
+                <div id="snxOptions" class="sub-section">
+                    <div class="field">
+                        <label for="l2s4snx">Name Option:</label>
+                        <select id="l2s4snx">
+                            <option value="0">0: Long Name</option>
+                            <option value="1">1: Short Name</option>
+                            <option value="2" selected>2: Long and Short Name</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Global Ionosphere Map</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getIonActive">
+                        <label class="switch-label" for="getIonActive">Download Ionosphere Data</label>
+                    </div>
+                </div>
+                <div id="ionOptions" class="sub-section">
+                    <div class="field">
+                        <label for="ionFrom">Ionosphere From:</label>
+                        <input type="text" id="ionFrom" value="cod">
+                        <div class="hint">e.g. 'cas', 'cod', 'all', etc.</div>
+                    </div>
+                    <div class="field">
+                        <label for="l2s4ion">Name Option:</label>
+                        <select id="l2s4ion">
+                            <option value="0">0: Long Name</option>
+                            <option value="1">1: Short Name</option>
+                            <option value="2" selected>2: Long and Short Name</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Rate of TEC Index</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getRotiActive">
+                        <label class="switch-label" for="getRotiActive">Download ROTI Data</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Tropospheric Product</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getTrpActive">
+                        <label class="switch-label" for="getTrpActive">Download Troposphere Data</label>
+                    </div>
+                </div>
+                <div id="trpOptions" class="sub-section">
+                    <div class="field">
+                        <label for="trpFrom">Troposphere From:</label>
+                        <select id="trpFrom">
+                            <option value="cod" selected>CODE</option>
+                            <option value="igs">IGS</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="trpList">Troposphere List:</label>
+                        <input type="text" id="trpList" value="site_trp.list">
+                    </div>
+                    <div class="field">
+                        <label for="l2s4trp">Name Option:</label>
+                        <select id="l2s4trp">
+                            <option value="0">0: Long Name</option>
+                            <option value="1">1: Short Name</option>
+                            <option value="2" selected>2: Long and Short Name</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>ANTEX Format Antenna</h2>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="getAtxActive">
+                        <label class="switch-label" for="getAtxActive">Download ANTEX Data</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button id="generateBtn">Generate Configuration File</button>
+                <button id="copyBtn">Copy to Clipboard</button>
+                <button id="downloadBtn" class="download-btn">Data Download</button>
+            </div>
+
+            <div class="section">
+                <h2>Generated Configuration</h2>
+                <pre id="output"></pre>
+            </div>
+        </div>
+
+        <!-- 消息提示框 -->
+        <div id="messageBox" class="message-box"></div>
+
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Handle time settings
+                const procTimeMode = document.getElementById('procTimeMode');
+                const timeInputs = document.getElementById('timeInputs');
+                const toggleDirSettingsBtn = document.getElementById('toggleDirSettings');
+                const advancedDirSettings = document.getElementById('advancedDirSettings');
+                const serverPort = 8080;
+
+                toggleDirSettingsBtn.addEventListener('click', function () {
+                    if (advancedDirSettings.classList.contains('hidden-section')) {
+                        advancedDirSettings.classList.remove('hidden-section');
+                        toggleDirSettingsBtn.textContent = 'Hide Advanced Directory Settings';
+                    } else {
+                        advancedDirSettings.classList.add('hidden-section');
+                        toggleDirSettingsBtn.textContent = 'Show Advanced Directory Settings';
+                    }
+                });
+
+                // 添加产品下载选项的显示/隐藏功能
+                function setupProductToggle(checkboxId, contentId) {
+                    const checkbox = document.getElementById(checkboxId);
+                    const content = document.getElementById(contentId);
+
+                    // 初始状态设置
+                    content.classList.toggle('hidden-section', !checkbox.checked);
+
+                    // 添加事件监听器
+                    checkbox.addEventListener('change', function () {
+                        content.classList.toggle('hidden-section', !this.checked);
+                    });
+                }
+
+                // 初始化所有产品的显示/隐藏功能
+                setupProductToggle('getObsActive', 'obsOptions');
+                setupProductToggle('getNavActive', 'navOptions');
+                setupProductToggle('getOrbClkActive', 'orbClkOptions');
+                setupProductToggle('getEopActive', 'eopOptions');
+                setupProductToggle('getObxActive', 'obxOptions');
+                setupProductToggle('getDsbActive', 'dsbOptions');
+                setupProductToggle('getOsbActive', 'osbOptions');
+                setupProductToggle('getSnxActive', 'snxOptions');
+                setupProductToggle('getIonActive', 'ionOptions');
+                setupProductToggle('getTrpActive', 'trpOptions');
+
+                // 显示消息提示框
+                function showMessage(message, type = 'success') {
+                    const messageBox = document.getElementById('messageBox');
+                    messageBox.textContent = message;
+                    messageBox.className = 'message-box';
+
+                    if (type === 'success') {
+                        messageBox.classList.add('success-message');
+                    } else if (type === 'error') {
+                        messageBox.classList.add('error-message');
+                    }
+
+                    messageBox.style.opacity = '1';
+
+                    setTimeout(() => {
+                        messageBox.style.opacity = '0';
+                    }, 8000);
+                }
+
+                // Generate button click handler
+                document.getElementById('generateBtn').addEventListener('click', function () {
+                    generateConfig();
+                    showMessage('Configuration generated successfully!');
+                });
+
+                // Copy button click handler
+                document.getElementById('copyBtn').addEventListener('click', function () {
+                    const output = document.getElementById('output');
+                    navigator.clipboard.writeText(output.textContent)
+                        .then(() => {
+                            showMessage('Configuration copied to clipboard!');
+                        })
+                        .catch(err => {
+                            console.error('Failed to copy: ', err);
+                            showMessage('Failed to copy configuration.', 'error');
+                        });
+                });
+
+                // 文件浏览功能
+                document.getElementById('browseBtn').addEventListener('click', function () {
+                    openFileBrowser();
+                });
+
+                function openFileBrowser() {
+                    // 创建模态对话框
+                    const modal = document.createElement('div');
+                    modal.className = 'modal';
+                    modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Select Directory</h3>
+                            <span class="close">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div class="current-path">
+                                <span id="currentPath"></span>
+                            </div>
+                            <div class="file-list" id="fileList"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="selectDirBtn">Select This Directory</button>
+                            <button id="cancelBtn">Cancel</button>
+                        </div>
+                    </div>
+                    `;
+                    document.body.appendChild(modal);
+
+                    // 获取当前路径
+                    const currentPath = document.getElementById('mainDir').value || '/';
+
+                    // 加载目录内容
+                    loadDirectoryContents(currentPath);
+
+                    // 关闭按钮事件
+                    modal.querySelector('.close').addEventListener('click', function () {
+                        document.body.removeChild(modal);
+                    });
+
+                    // 取消按钮事件
+                    document.getElementById('cancelBtn').addEventListener('click', function () {
+                        document.body.removeChild(modal);
+                    });
+
+                    // 选择当前目录按钮事件
+                    document.getElementById('selectDirBtn').addEventListener('click', function () {
+                        const path = document.getElementById('currentPath').textContent;
+                        document.getElementById('mainDir').value = path;
+                        document.body.removeChild(modal);
+                    });
+                }
+
+                function loadDirectoryContents(path) {
+                    fetch(`http://localhost:10000/browse?path=${encodeURIComponent(path)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                showMessage(data.error, 'error');
+                                return;
+                            }
+
+                            // 显示当前路径
+                            document.getElementById('currentPath').textContent = data.current_path;
+
+                            // 清空文件列表
+                            const fileList = document.getElementById('fileList');
+                            fileList.innerHTML = '';
+
+                            // 添加返回上级目录选项
+                            if (data.parent_directory) {
+                                const parentItem = document.createElement('div');
+                                parentItem.className = 'file-item directory';
+                                parentItem.innerHTML = '<span class="file-icon">📁</span> ..';
+                                parentItem.addEventListener('click', function () {
+                                    loadDirectoryContents(data.parent_directory);
+                                });
+                                fileList.appendChild(parentItem);
+                            }
+
+                            // 添加目录和文件
+                            data.items.forEach(item => {
+                                const fileItem = document.createElement('div');
+                                fileItem.className = `file-item ${item.is_directory ? 'directory' : 'file'}`;
+                                fileItem.innerHTML = `<span class="file-icon">${item.is_directory ? '📁' : '📄'}</span> ${item.name}`;
+
+                                if (item.is_directory) {
+                                    fileItem.addEventListener('click', function () {
+                                        loadDirectoryContents(item.path);
+                                    });
+                                }
+
+                                fileList.appendChild(fileItem);
+                            });
+                        })
+                        .catch(error => {
+                            showMessage('Error connecting to server: ' + error.message, 'error');
+                        });
+                }
+
+                // Download button click handler
+                document.getElementById('downloadBtn').addEventListener('click', function () {
+                    // 首先生成配置
+                    generateConfig();
+
+                    // 获取生成的配置内容
+                    const configContent = document.getElementById('output').textContent;
+
+                    showMessage('Already sent config file to server, Check the console for progress', 'success');
+
+                    // 发送到服务器保存并执行下载
+                    fetch('http://localhost:10000/download', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ config: configContent })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.success) {
+                                showMessage('Error: ' + data.error, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            showMessage('Error connecting to server: ' + error.message, 'error');
+                        });
+                });
+
+
+                procTimeMode.addEventListener('change', function () {
+                    timeInputs.innerHTML = '';
+
+                    if (this.value === '1') {
+                        timeInputs.innerHTML = `
+                        <div>
+                            <label for="year">Year:</label>
+                            <input type="number" id="year" value="2024">
+                        </div>
+                        <div>
+                            <label for="month">Month:</label>
+                            <input type="number" id="month" value="1">
+                        </div>
+                        <div>
+                            <label for="day">Day:</label>
+                            <input type="number" id="day" value="1">
+                        </div>
+                        <div>
+                            <label for="ndays">Number of Days:</label>
+                            <input type="number" id="ndays" value="1">
+                        </div>
+                    `;
+                    } else if (this.value === '2') {
+                        timeInputs.innerHTML = `
+                        <div>
+                            <label for="year">Year:</label>
+                            <input type="number" id="year" value="2024">
+                        </div>
+                        <div>
+                            <label for="doy">DOY (Day of Year):</label>
+                            <input type="number" id="doy" value="1">
+                        </div>
+                        <div>
+                            <label for="ndays">Number of Days:</label>
+                            <input type="number" id="ndays" value="1">
+                        </div>
+                    `;
+                    } else if (this.value === '3') {
+                        timeInputs.innerHTML = `
+                        <div>
+                            <label for="week">GPS Week:</label>
+                            <input type="number" id="week" value="2242">
+                        </div>
+                        <div>
+                            <label for="dow">Day of Week (0-6):</label>
+                            <input type="number" id="dow" value="0" min="0" max="6">
+                        </div>
+                        <div>
+                            <label for="ndays">Number of Days:</label>
+                            <input type="number" id="ndays" value="1">
+                        </div>
+                    `;
+                    }
+                });
+
+                // Generate button click handler
+                document.getElementById('generateBtn').addEventListener('click', generateConfig);
+
+                // Copy button click handler
+                document.getElementById('copyBtn').addEventListener('click', function () {
+                    const output = document.getElementById('output');
+                    navigator.clipboard.writeText(output.textContent)
+                        .then(() => {
+                            alert('Configuration copied to clipboard!');
+                        })
+                        .catch(err => {
+                            console.error('Failed to copy: ', err);
+                            alert('Failed to copy configuration.');
+                        });
+                });
+
+                // Generate configuration on page load
+                generateConfig();
+
+                function generateConfig() {
+                    let config = "";
+
+                    // Header
+                    config += "# This File is Generated By GOOG_CG(Configuration Generator). Created By SheepLie\n\n";
+
+                    // Directories
+                    config += "# The root/main directory of GNSS observations and products  -------------------\n";
+                    config += `mainDir       : ${document.getElementById('mainDir').value}\n`;
+                    config += `obsDir        : ${document.getElementById('obsDir').value}\n`;
+                    config += `navDir        : ${document.getElementById('navDir').value}\n`;
+                    config += `orbDir        : ${document.getElementById('orbDir').value}\n`;
+                    config += `clkDir        : ${document.getElementById('clkDir').value}\n`;
+                    config += `eopDir        : ${document.getElementById('eopDir').value}\n`;
+                    config += `obxDir        : ${document.getElementById('obxDir').value}\n`;
+                    config += `biaDir        : ${document.getElementById('biaDir').value}\n`;
+                    config += `snxDir        : ${document.getElementById('snxDir').value}\n`;
+                    config += `ionDir        : ${document.getElementById('ionDir').value}\n`;
+                    config += `ztdDir        : ${document.getElementById('ztdDir').value}\n`;
+                    config += `tblDir        : ${document.getElementById('tblDir').value}\n`;
+                    config += `logDir        : ${document.getElementById('logDir').value}\n`;
+                    config += `3partyDir     : ${document.getElementById('3partyDir').value}\n\n`;
+
+                    // Time settings
+                    config += "# Time settings ----------------------------------------------------------------\n";
+
+                    let timeStr = '';
+                    const mode = document.getElementById('procTimeMode').value;
+                    if (mode === '1' && document.getElementById('year') && document.getElementById('month') && document.getElementById('day') && document.getElementById('ndays')) {
+                        const year = document.getElementById('year').value;
+                        const month = document.getElementById('month').value;
+                        const day = document.getElementById('day').value;
+                        const ndays = document.getElementById('ndays').value;
+                        timeStr = `${mode}  ${year}  ${month} ${day}   ${ndays}`;
+                    } else if (mode === '2' && document.getElementById('year') && document.getElementById('doy') && document.getElementById('ndays')) {
+                        const year = document.getElementById('year').value;
+                        const doy = document.getElementById('doy').value;
+                        const ndays = document.getElementById('ndays').value;
+                        timeStr = `${mode}  ${year}  ${doy} ${ndays}`;
+                    } else if (mode === '3' && document.getElementById('week') && document.getElementById('dow') && document.getElementById('ndays')) {
+                        const week = document.getElementById('week').value;
+                        const dow = document.getElementById('dow').value;
+                        const ndays = document.getElementById('ndays').value;
+                        timeStr = `${mode}  ${week}  ${dow} ${ndays}`;
+                    }
+
+                    config += `procTime      : ${timeStr}\n\n`;
+
+                    // FTP download settings
+                    config += "# Settings of FTP downloading --------------------------------------------------\n";
+                    config += `minusAdd1day  : ${document.getElementById('minusAdd1day').checked ? '1' : '0'}\n`;
+                    config += `merge_sp3files: ${document.getElementById('merge_sp3files').checked ? '1' : '0'}\n`;
+                    config += `printInfoWget : ${document.getElementById('printInfoWget').checked ? '1' : '0'}\n\n`;
+
+                    // Handling of FTP downloading
+                    config += "# Handling of FTP downloading --------------------------------------------------\n";
+                    config += "ftpDownloading:                   \n";
+                    config += `  opt4ftp: ${document.getElementById('ftpActive').checked ? '1' : '0'}\n`;
+                    config += `  ftpArch: ${document.getElementById('ftpArch').value}\n`;
+
+                    // Observation data
+                    config += "getObs:                           \n";
+                    config += `  opt4obs: ${document.getElementById('getObsActive').checked ? '1' : '0'}\n`;
+                    config += `  obsType: ${document.getElementById('obsType').value}\n`;
+                    config += `  obsFrom: ${document.getElementById('obsFrom').value}\n`;
+                    config += `  obsList: ${document.getElementById('obsList').value}\n`;
+                    config += `  sHH4obs: ${document.getElementById('sHH4obs').value}\n`;
+                    config += `  nHH4obs: ${document.getElementById('nHH4obs').value}\n`;
+                    config += `  l2s4obs: ${document.getElementById('l2s4obs').value}\n`;
+                    config += "                                  #   NOTE: The 5th and 6th items are valid ONLY when the 2nd item 'hourly', 'highrate', '5s', or '1s' is set.\n";
+                    config += "                                  #   NOTE: If the 3rd item is 'igs', 'mgex', 'igm', the 2nd item can be 'daily', 'hourly', or 'highrate';\n";
+                    config += "                                  #         If the 3rd item is 'cut', 'ngs', 'epn', or 'pbo', the 2nd item should be 'daily';\n";
+                    config += "                                  #         If the 3rd item is 'hk', the 2nd item can be 1) '30s', '5s', or '1s' 2) '30s', '05s', or '01s'. However, '30 s', '5 s', or '1 s' is NOT allowed.\n";
+                    config += "                                  #   NOTE: If the 3rd item is 'hk' 'ngs', or 'pbo', the 4th item should ONLY be the full path of site list.\n";
+                    config += "                                  #   INFO: The 2nd item 'igs' is for IGS observation (RINEX version 2.xx, short name 'd');\n";
+                    config += "                                  #         The 2nd item 'mgex' is for MGEX observation (RINEX version 3.xx, long name 'crx');\n";
+                    config += "                                  #         The 2nd item 'igm' is for the union of IGS and MGEX (IGS + MGEX, while the priority of MGEX sites is higher) observation with respect to the site name;\n";
+                    config += "                                  #         The 2nd item 'cut' is for Curtin University of Technology (CUT) observation (RINEX version 3.xx, long name 'crx');\n";
+                    config += "                                  #         The 2nd item 'hk' is for Hong Kong CORS observation (RINEX version 3.xx, long name 'crx');\n";
+                    config += "                                  #         The 2nd item 'ngs' is for NGS/NOAA CORS observation (RINEX version 2.xx, short name 'd');\n";
+                    config += "                                  #         The 2nd item 'epn' is for EUREF Permanent Network (EPN) observation (RINEX version 3.xx, long name 'crx' and RINEX version 2.xx, short name 'd');\n";
+                    config += "                                  #         The 2nd item 'pbo' is for Plate Boundary Observatory (PBO) observation (RINEX version 3.xx, long name 'crx');\n";
+                    config += "                                  #         The 2nd item 'chi' is for Centro Sismologico Nacional of Universidad de Chile observation (RINEX version 2.xx, short name \"d\")\n";
+
+                    // Navigation data
+                    config += "getNav:                           \n";
+                    config += `  opt4nav: ${document.getElementById('getNavActive').checked ? '1' : '0'}\n`;
+                    config += `  navType: ${document.getElementById('navType').value}\n`;
+                    config += `  navSys : ${document.getElementById('navSys').value}\n`;
+                    config += `  navFrom: ${document.getElementById('navFrom').value}\n`;
+                    config += `  navList: ${document.getElementById('navList').value}\n`;
+                    config += `  sHH4nav: ${document.getElementById('sHH4nav').value}\n`;
+                    config += `  nHH4nav: ${document.getElementById('nHH4nav').value}\n`;
+                    config += `  l2s4nav: ${document.getElementById('l2s4nav').value}\n`;
+                    config += "                                  #   NOTE: The 5th, 6th, and 7th items are valid ONLY when the 2nd item 'hourly' is set.\n";
+                    config += "                                  #   NOTE: If the 2nd item is 'daily', the 3rd item should be 'gps', 'glo', 'mixed3', or 'mixed4';\n";
+                    config += "                                  #         If the 2nd item is 'hourly', the 3rd item can be 'gps', 'glo', 'bds', 'gal', 'qzs', 'irn', 'mixed', or 'all'.\n";
+                    config += "                                  #   NOTE: The 4th item is valid ONLY when the 3rd item 'mixed3' is set.\n";
+                    config += "                                  #   NOTE: The 3rd item 'mixed3' is for RINEX 3.xx, while 'mixed4' is for RINEX 4.xx.\n";
+
+                    // Orbit and Clock
+                    config += "getOrbClk:                        \n";
+                    config += `  opt4oc : ${document.getElementById('getOrbClkActive').checked ? '1' : '0'}\n`;
+                    config += `  ocFrom : ${document.getElementById('ocFrom').value}\n`;
+                    config += `  sHH4oc : ${document.getElementById('sHH4oc').value}\n`;
+                    config += `  nHH4oc : ${document.getElementById('nHH4oc').value}\n`;
+                    config += `  l2s4oc : ${document.getElementById('l2s4oc').value}\n`;
+
+                    // EOP
+                    config += "getEop:                           \n";
+                    config += `  opt4eop: ${document.getElementById('getEopActive').checked ? '1' : '0'}\n`;
+                    config += `  eopFrom: ${document.getElementById('eopFrom').value}\n`;
+                    config += `  sHH4eop: ${document.getElementById('sHH4eop').value}\n`;
+                    config += `  nHH4eop: ${document.getElementById('nHH4eop').value}\n`;
+                    config += `  l2s4eop: ${document.getElementById('l2s4eop').value}\n`;
+
+                    // ORBEX
+                    config += "getObx:                           \n";
+                    config += `  opt4obx: ${document.getElementById('getObxActive').checked ? '1' : '0'}\n`;
+                    config += `  obxFrom: ${document.getElementById('obxFrom').value}\n`;
+
+                    // DSB
+                    config += "getDsb:                           \n";
+                    config += `  opt4dsb: ${document.getElementById('getDsbActive').checked ? '1' : '0'}\n`;
+                    config += `  dsbFrom: ${document.getElementById('dsbFrom').value}\n`;
+
+                    // OSB
+                    config += "getOsb:                           \n";
+                    config += `  opt4osb: ${document.getElementById('getOsbActive').checked ? '1' : '0'}\n`;
+                    config += `  osbFrom: ${document.getElementById('osbFrom').value}\n`;
+
+                    // SINEX
+                    config += "getSnx:                           \n";
+                    config += `  opt4snx: ${document.getElementById('getSnxActive').checked ? '1' : '0'}\n`;
+                    config += `  l2s4snx: ${document.getElementById('l2s4snx').value}\n`;
+
+                    // GIM
+                    config += "getIon:                           \n";
+                    config += `  opt4ion: ${document.getElementById('getIonActive').checked ? '1' : '0'}\n`;
+                    config += `  ionFrom: ${document.getElementById('ionFrom').value}\n`;
+                    config += `  l2s4ion: ${document.getElementById('l2s4ion').value}\n`;
+
+                    // ROTI
+                    config += "getRoti:                          \n";
+                    config += `  opt4rot: ${document.getElementById('getRotiActive').checked ? '1' : '0'}\n`;
+
+                    // Troposphere
+                    config += "getTrp:                           \n";
+                    config += `  opt4trp: ${document.getElementById('getTrpActive').checked ? '1' : '0'}\n`;
+                    config += `  trpFrom: ${document.getElementById('trpFrom').value}\n`;
+                    config += `  trpList: ${document.getElementById('trpList').value}\n`;
+                    config += `  l2s4trp: ${document.getElementById('l2s4trp').value}\n`;
+
+                    // ANTEX
+                    config += "getAtx:                           \n";
+                    config += `  opt4atx: ${document.getElementById('getAtxActive').checked ? '1' : '0'}\n`;
+
+                    // Output the generated configuration
+                    document.getElementById('output').textContent = config;
+                }
+            });
+        </script>
+</body>
+
+</html>
