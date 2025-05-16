@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon.ico">
     <title>GAMPII-GOOD Configuration Generator</title>
     <style>
         body {
@@ -275,7 +276,7 @@
             <h2>Directory Settings</h2>
             <div class="field">
                 <div class="input-with-button">
-                    <input type="text" id="mainDir" value="/home/sheep/文档/GOOD_GUI/bin_Linux">
+                    <input type="text" id="mainDir" value="/home/sheep/文档/GOOD_GUI_Local/bin_Linux">
                     <button type="button" id="browseBtn" class="browse-btn">Browse...</button>
                 </div>
                 <div class="hint">The root/main directory of GNSS observations and products</div>
@@ -457,12 +458,12 @@
                     </div>
                     <div class="field">
                         <label for="obsList">Observation List:</label>
-                        <input type="text" id="obsList" value="all">
+                        <input type="text" id="obsList" value="site_mgex.list">
                         <div class="hint">'all' or site list file name</div>
                     </div>
                     <div class="field">
                         <label for="sHH4obs">Start Hour:</label>
-                        <input type="text" id="sHH4obs" value="02">
+                        <input type="text" id="sHH4obs" value="00">
                     </div>
                     <div class="field">
                         <label for="nHH4obs">Consecutive Hours:</label>
@@ -908,7 +909,7 @@
                 }
 
                 function loadDirectoryContents(path) {
-                    fetch(`http://localhost:10000/browse?path=${encodeURIComponent(path)}`)
+                    fetch(`http://localhost:${serverPort}/browse?path=${encodeURIComponent(path)}`)
                         .then(response => response.json())
                         .then(data => {
                             if (data.error) {
@@ -965,7 +966,7 @@
                     showMessage('Already sent config file to server, Check the console for progress', 'success');
 
                     // 发送到服务器保存并执行下载
-                    fetch('http://localhost:10000/download', {
+                    fetch(`http://localhost:${serverPort}/download`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'

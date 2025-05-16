@@ -204,28 +204,58 @@ def is_port_available(port):
             return False
         
 # 启动服务器
-def run_server(port=10000):
-
+def run_server(port=8080):
     # 检查端口是否可用，如果不可用则尝试其他端口
-    # original_port = port
-    # while not is_port_available(port) and port < original_port + 100:
-    #     print(f"Port {port} is in use, trying port {port + 1}")
-    #     port += 1
+    original_port = port
+    while not is_port_available(port) and port < original_port + 100:
+        print(f"Port {port} is in use, trying port {port + 1}")
+        port += 1
     
-    # if port >= original_port + 100:
-    #     print(f"Could not find an available port in range {original_port}-{original_port + 99}")
-    #     return
+    if port >= original_port + 100:
+        print(f"Could not find an available port in range {original_port}-{original_port + 99}")
+        return
 
-    # with open('config_generator.html', 'r') as file:
-    #     html_content = file.read()
-    #     html_content = html_content.replace('"SERVER_PORT_PLACEHOLDER"',str(port))
-    # file.close
-    handler = CORSHTTPRequestHandler
-    print(f"Server running at http://localhost:{port}")
-    # 启动浏览器
-    webbrowser.open(f"http://localhost:{port}")
-    with socketserver.TCPServer(("", port), handler) as httpd:
-        httpd.serve_forever()
+    # 读取 HTML 文件
+    try:
+        with open('config_generator.html', 'r', encoding='utf-8') as file:
+            html_content = file.read()
+        
+        # 获取当前脚本的目录路径
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        import re
+        # 1. 替换 mainDir 输入框的 value 属性
+        pattern_dir = r'(<input[^>]*id="mainDir"[^>]*value=")([^"]*)(">)'
+        html_content = re.sub(pattern_dir, lambda m: m.group(1) + script_dir.replace('\\', '\\\\') + m.group(3), html_content)
+        
+        # 2. 替换端口号 - 使用正则表达式查找 serverPort 变量定义
+        pattern_port = r'(const\s+serverPort\s*=\s*)(\d+)'
+        html_content = re.sub(pattern_port, lambda m: m.group(1) + str(port), html_content)
+        
+        # 写入修改后的内容
+        with open('config_generator.html', 'w', encoding='utf-8') as file:
+            file.write(html_content)
+        
+        print(f"Change the main_dir into {script_dir}")
+        print(f"Change the port into {port}")
+        handler = CORSHTTPRequestHandler
+        print(f"Server running at http://localhost:{port}")
+        # 启动浏览器
+        webbrowser.open(f"http://localhost:{port}")
+        with socketserver.TCPServer(("", port), handler) as httpd:
+            httpd.serve_forever()
+    except FileNotFoundError:
+        print("Error: config_generator.html file not found")
+        return
+    except PermissionError:
+        print("Error: Permission denied when accessing config_generator.html")
+        return
+    except Exception as e:
+        print(f"Error processing HTML file: {str(e)}")
+        return
+
+
+
 
 
 
