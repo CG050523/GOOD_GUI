@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="keywords" content="天地图" />
+    <title>StationMap</title>
+    <script type="text/javascript"
+        src="http://api.tianditu.gov.cn/api?v=4.0&tk=your_own_token"></script>
+    <script src="./thirdparty/station_coordinates.js"> </script>
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h1,
+        h2 {
+            color: #2c3e50;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .info-panels-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #1a252f;
+        }
+
+        #mapDiv {
+            width: 100%;
+            height: 500px;
+            z-index: 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .info-panel {
+            position: relative;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        #infoContainer {
+            min-width: 200px;
+        }
+
+        #coordinateBox {
+            min-width: 250px;
+        }
+
+        #selectedStationsContainer {
+            min-width: 400px;
+            max-height: 500px;
+            overflow: visible;
+        }
+
+        .stations-flex-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        .station-item {
+            flex: 0 0 calc(20% - 10px);
+            min-width: 100px;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+
+        .station-item:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(33, 150, 243, 0.2);
+        }
+
+        .station-info-popup {
+            position: absolute;
+            background: rgba(44, 62, 80, 0.9);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1001;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #copyButton {
+            background-color: #27ae60;
+            margin-top: 20px;
+            width: 100%;
+            font-size: 14px;
+            padding: 12px 15px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        #copyButton:hover {
+            background-color: #219653;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(39, 174, 96, 0.3);
+        }
+
+        #copyButton:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #saveButton {
+            background-color: #2c3e50;
+            margin-top: 20px;
+            width: 100%;
+            font-size: 14px;
+            padding: 12px 15px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        #saveButton:hover {
+            background-color: #1a252f;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(39, 174, 96, 0.3);
+        }
+
+        #saveButton:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .highlight-text {
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .empty-state-flex {
+            width: 100%;
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-style: italic;
+            background: #f8f8f8;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        /* 消息提醒样式 */
+        .message-box {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .success-message {
+            background-color: #27ae60;
+        }
+
+        .error-message {
+            background-color: #e74c3c;
+        }
+    </style>
+    <script>
+        var map, zoom = 3;
+        var init_center = [33.662, 36.841];
+        var lnglats;
+        var _CloudCollection; //海量点对象
+        var selectedStations = new Set(); // 存储选中的站点
+        var stationPopup = null; // 站点信息弹窗
+        var serverPort = 8080; // 与主窗口使用相同端口
+
+        function sendStationsToServer(stations) {
+            const stationList = Array.from(stations).map(stationKey => {
+                const parts = stationKey.split('_');
+                return {
+                    code: parts[0],
+                    longitude: parseFloat(parts[1]),
+                    latitude: parseFloat(parts[2])
+                };
+            });
+
+            fetch(`http://localhost:${serverPort}/save-stations`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    stations: stationList,
+                    count: stationList.length
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage(`已成功保存 ${stationList.length} 个站点到服务器！`);
+                    } else {
+                        showMessage('保存失败: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    showMessage('服务器连接失败: ' + error.message, 'error');
+                });
+        }
+
+        function onLoad() {
+            // 初始化地图对象
+            // map = new T.Map("mapDiv", {
+            //     projection: 'EPSG:4326'
+            // });
+            map = new T.Map("mapDiv");
+
+            map.enableScrollWheelZoom();
+            map.enableInertia();
+
+            lnglats = [];
+            // 将解析后的经纬度添加到points数组
+            for (var i = 0; i < coordinates.data.length; i++) {
+                var single_point = new T.LngLat(coordinates.data[i][1], coordinates.data[i][2]);
+                var _code = coordinates.data[i][0];
+
+                lnglats.push(single_point);
+            }
+
+            // 设置中心点坐标和地图级别
+            // if (lnglats.length > 0) {
+            map.centerAndZoom(init_center, zoom);
+            // }
+
+            // 更新点位数量显示
+            document.getElementById('pointCount').innerHTML = lnglats.length;
+
+            // 使用海量点绘制所有点位
+            if (document.createElement('canvas').getContext) {  // 判断当前浏览器是否支持绘制海量点
+                _CloudCollection = new T.CloudMarkerCollection(lnglats, {
+                    color: '#191970',  // 更改点的颜色
+                    SizeType: TDT_POINT_SIZE_SMALL
+                });
+                map.addOverLay(_CloudCollection);
+            } else {
+                alert('此示例目前只有在IE9及以上浏览器打开');
+            }
+
+            // 添加地图类型控件
+            var ctrl_map_type = new T.Control.MapType();
+            // 设置地图缩放控件
+            control = new T.Control.Zoom();
+            control.setPosition(T_ANCHOR_BOTTOM_RIGHT);
+            map.addControl(control);
+            map.addControl(ctrl_map_type);
+
+            _CloudCollection.addEventListener("click", function (e) {
+                handleStationClick(e);
+                // alert(e.lnglat.lng);
+            });
+
+            // 添加鼠标移动事件监听，显示坐标
+            map.addEventListener("mousemove", function (e) {
+                document.getElementById('currentCoord').innerHTML =
+                    `Lon: ${e.lnglat.lng.toFixed(6)} , Lat: ${e.lnglat.lat.toFixed(6)}`;
+            });
+        }
+
+        function handleStationClick(e) {
+            var clickedLng = e.lnglat.lng;
+            var clickedLat = e.lnglat.lat;
+
+            // 找到对应的站点数据
+            var stationData = null;
+            var stationIndex = -1;
+
+            for (var i = 0; i < coordinates.data.length; i++) {
+                if (Math.abs(coordinates.data[i][1] - clickedLng) < 0.00001 &&
+                    Math.abs(coordinates.data[i][2] - clickedLat) < 0.00001) {
+                    stationData = coordinates.data[i];
+                    stationIndex = i;
+                    break;
+                }
+            }
+
+
+            if (stationData) {
+                var stationKey = `${stationData[0]}_${stationData[1]}_${stationData[2]}`;
+
+                if (selectedStations.has(stationKey)) {
+                    // 取消选择
+                    selectedStations.delete(stationKey);
+                    hideStationPopup();
+                    showMessage(`已移除站点 ${stationData[0]}`, 'error');
+                    // alert("Station " + stationData[0] + " has deleted.");
+                } else {
+                    // 选择站点
+                    selectedStations.add(stationKey);
+                    // showStationPopup(stationData);
+                    showMessage(`已选择站点 ${stationData[0]}`);
+                    // alert("Station " + stationData[0] + " has selected.");
+                }
+
+                updateSelectedStationsList();
+            }
+        }
+
+        function showStationPopup(stationData) {
+            hideStationPopup();
+
+            stationPopup = document.createElement('div');
+            stationPopup.className = 'station-info-popup';
+            stationPopup.innerHTML = `
+                Code: ${stationData[0]}<br>
+                Lon: ${stationData[1].toFixed(6)}<br>
+                Lat: ${stationData[2].toFixed(6)}
+            `;
+
+            // stationPopup.style.left = (pixel.x + 10) + 'px';
+            // stationPopup.style.top = (pixel.y - 50) + 'px';
+
+            document.body.appendChild(stationPopup);
+
+            // 3秒后自动隐藏
+            setTimeout(hideStationPopup, 3000);
+        }
+
+        function hideStationPopup() {
+            if (stationPopup) {
+                document.body.removeChild(stationPopup);
+                stationPopup = null;
+            }
+        }
+
+        function updateSelectedStationsList() {
+            var listContainer = document.getElementById('selectedStationsList');
+            var copyButton = document.getElementById('copyButton');
+
+            listContainer.innerHTML = '';
+
+            if (selectedStations.size === 0) {
+                var flexContainer = document.createElement('div');
+                flexContainer.className = 'stations-flex-container';
+
+                var emptyDiv = document.createElement('div');
+                emptyDiv.className = 'empty-state-flex';
+                emptyDiv.textContent = '暂无选择的站点';
+
+                flexContainer.appendChild(emptyDiv);
+                listContainer.appendChild(flexContainer);
+
+                if (copyButton) copyButton.disabled = true;
+                return;
+            }
+
+            if (copyButton) copyButton.disabled = false;
+
+            // 创建弹性布局容器
+            var flexContainer = document.createElement('div');
+            flexContainer.className = 'stations-flex-container';
+
+            selectedStations.forEach(function (stationKey) {
+                var parts = stationKey.split('_');
+                var stationDiv = document.createElement('div');
+                stationDiv.className = 'station-item';
+
+                // 优化显示内容，使其在较小空间内也能清晰显示
+                stationDiv.innerHTML = `
+            <div style="font-weight: bold; font-size: 13px; color: #2c3e50; margin-bottom: 6px;">
+                ${parts[0]}
+            </div>
+            <div style="font-size: 10px; color: #666; line-height: 1.3;">
+                经度: ${parseFloat(parts[1]).toFixed(4)}<br>
+                纬度: ${parseFloat(parts[2]).toFixed(4)}
+            </div>
+        `;
+
+                // 添加点击删除功能
+                stationDiv.onclick = function () {
+                    selectedStations.delete(stationKey);
+                    updateSelectedStationsList();
+                    showMessage(`已移除站点 ${parts[0]}`, 'error');
+                };
+
+                stationDiv.title = `点击移除站点 ${parts[0]}`;
+                flexContainer.appendChild(stationDiv);
+            });
+
+            listContainer.appendChild(flexContainer);
+        }
+
+
+        function copyStationsToClipboard() {
+            if (selectedStations.size === 0) {
+                showMessage('没有选中的站点需要复制！', 'error');
+                return;
+            }
+
+            var copyContent = '';
+            selectedStations.forEach(function (stationKey) {
+                var parts = stationKey.split('_');
+                var stationCode = parts[0];
+                copyContent += stationCode + '\n';
+            });
+
+            copyContent = copyContent.trim();
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(copyContent).then(function () {
+                    showMessage(`已成功复制 ${selectedStations.size} 个站点名到剪贴板！`);
+                }).catch(function (err) {
+                    fallbackCopyTextToClipboard(copyContent);
+                });
+            } else {
+                fallbackCopyTextToClipboard(copyContent);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                var successful = document.execCommand('copy');
+                if (successful) {
+                    showMessage(`已成功复制 ${selectedStations.size} 个站点名到剪贴板！`);
+                } else {
+                    showMessage('复制失败，请手动复制！', 'error');
+                }
+            } catch (err) {
+                showMessage('复制失败，浏览器不支持此功能！', 'error');
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        // 消息提醒系统 - 与config_generator.html保持一致
+        function showMessage(message, type = 'success') {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = 'message-box';
+
+            if (type === 'success') {
+                messageBox.classList.add('success-message');
+            } else if (type === 'error') {
+                messageBox.classList.add('error-message');
+            }
+
+            messageBox.style.opacity = '1';
+
+            setTimeout(() => {
+                messageBox.style.opacity = '0';
+            }, 8000);
+        }
+        function saveStationsCallback() {
+            console.log('button clicked');
+            if (selectedStations.size === 0) {
+                showMessage('没有选中的站点需要保存！', 'error');
+                return;
+            }
+
+            // 发送到服务器保存
+            sendStationsToServer(selectedStations);
+        }
+
+        // document.getElementById('saveButton').addEventListener('click', function () {
+        //     console.log('button clicked');
+        //     if (selectedStations.size === 0) {
+        //         showMessage('没有选中的站点需要保存！', 'error');
+        //         return;
+        //     }
+
+        //     // 发送到服务器保存
+        //     sendStationsToServer(selectedStations);
+        // });
+
+    </script>
+</head>
+
+<body onLoad="onLoad()">
+    <div class="container">
+        <h1>GNSS Station Selection Map</h1>
+
+        <div class="info-panels-container">
+            <div id="infoContainer" class="info-panel">
+                <h2 style="margin-top: 0; font-size: 16px;">站点统计</h2>
+                <div class="field">
+                    <label>总站点数:</label>
+                    <span id="pointCount" class="highlight-text">0</span>
+                </div>
+            </div>
+
+            <div id="coordinateBox" class="info-panel">
+                <h2 style="margin-top: 0; font-size: 16px;">当前坐标</h2>
+                <div id="currentCoord">移动鼠标查看坐标</div>
+            </div>
+
+        </div>
+
+        <div class="section">
+            <!-- <h2>地图视图</h2> -->
+            <div id="mapDiv"></div>
+        </div>
+
+        <div class="info-panels-container">
+
+            <div id="selectedStationsContainer" class="info-panel">
+                <h2 style="margin-top: 0; font-size: 16px;">已选择站点</h2>
+                <div id="selectedStationsList"></div>
+                <button id="copyButton" onclick="copyStationsToClipboard()">复制到剪贴板</button>
+                <button id="saveButton" onclick="saveStationsCallback()">保存为site_obs.list</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息提示框 -->
+    <div id="messageBox" class="message-box"></div>
+
+</body>
+
+
+</html>

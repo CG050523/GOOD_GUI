@@ -33,6 +33,7 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
 
         .section {
@@ -135,7 +136,7 @@
         }
 
         .message-box {
-            position: fixed;
+            position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
@@ -144,7 +145,7 @@
             color: white;
             font-weight: bold;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
+            z-index: 1003;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -165,6 +166,41 @@
 
         .input-with-button input {
             flex-grow: 1;
+        }
+
+        .time-input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .time-input-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+        }
+
+        .time-input-group label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .time-input-group input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .time-input-group input[type="number"]:focus {
+            border-color: #2c3e50;
+            outline: none;
+            box-shadow: 0 0 5px rgba(44, 62, 80, 0.2);
         }
 
         .browse-btn {
@@ -266,6 +302,52 @@
         .download-btn:hover {
             background-color: #2980b9;
         }
+
+        .map-btn {
+            margin-top: 0;
+            white-space: nowrap;
+            background-color: #3498db;
+        }
+
+        .map-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .map-modal-content {
+            width: 90%;
+            max-width: 1300px;
+            height: 90vh;
+            max-height: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-container {
+            padding: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .map-container iframe {
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-footer button {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .map-info {
+            padding: 15px;
+            text-align: center;
+            color: #555;
+        }
     </style>
 </head>
 
@@ -273,15 +355,15 @@
     <div class="container">
         <h1>GAMPII-GOOD Configuration Generator (Created By SheepLie)</h1>
         <div class="section">
-            <h2>Directory Settings</h2>
+            <h2>目录设置</h2>
             <div class="field">
                 <div class="input-with-button">
-                    <input type="text" id="mainDir" value="/home/sheep/文档/GOOD_GUI_Local/bin_Win">
-                    <button type="button" id="browseBtn" class="browse-btn">Browse...</button>
+                    <input type="text" id="mainDir" value="/home/sheep/桌面/GOOD_GUI/bin_Win">
+                    <button type="button" id="browseBtn" class="browse-btn">浏览目录...</button>
                 </div>
-                <div class="hint">The root/main directory of GNSS observations and products</div>
+                <div class="hint">GNSS观测值和产品的下载存储目录(包括第三方程序存储位置)</div>
             </div>
-            <button type="button" id="toggleDirSettings" class="toggle-btn">Show Advanced Directory Settings</button>
+            <button type="button" id="toggleDirSettings" class="toggle-btn">显示高级目录设置</button>
             <div id="advancedDirSettings" class="hidden-section">
                 <div class="field">
                     <label for="obsDir">Observation Directory:</label>
@@ -362,19 +444,22 @@
                     </select>
                 </div>
                 <div class="field" id="timeInputs">
-                    <div>
-                        <label for="year">Year:</label>
-                        <input type="number" id="year" value="2024">
-                    </div>
-                    <div>
-                        <label for="doy">DOY (Day of Year):</label>
-                        <input type="number" id="doy" value="1">
-                    </div>
-                    <div>
-                        <label for="ndays">Number of Days:</label>
-                        <input type="number" id="ndays" value="1">
+                    <div class="time-input-container">
+                        <div class="time-input-group">
+                            <label for="year">Year:</label>
+                            <input type="number" id="year" value="2024">
+                        </div>
+                        <div class="time-input-group">
+                            <label for="doy">DOY (Day of Year):</label>
+                            <input type="number" id="doy" value="1" min="1" max="366">
+                        </div>
+                        <div class="time-input-group">
+                            <label for="ndays">Number of Days:</label>
+                            <input type="number" id="ndays" value="1" min="1">
+                        </div>
                     </div>
                 </div>
+
             </div>
 
             <div class="section">
@@ -402,6 +487,12 @@
                     </div>
                     <div class="hint">Printing the information generated by 'wget'</div>
                 </div>
+                <div class="field">
+                    <div class="switch-container">
+                        <input type="checkbox" id="simplifyDirStructure">
+                        <label class="switch-label" for="simplifyDirStructure">Simplify The Dir Structure</label>
+                    </div>
+                </div>
             </div>
 
             <div class="section">
@@ -428,6 +519,7 @@
                     <div class="switch-container">
                         <input type="checkbox" id="getObsActive">
                         <label class="switch-label" for="getObsActive">Download Observation Data</label>
+
                     </div>
                 </div>
                 <div id="obsOptions" class="sub-section">
@@ -458,7 +550,10 @@
                     </div>
                     <div class="field">
                         <label for="obsList">Observation List:</label>
-                        <input type="text" id="obsList" value="site_mgex.list">
+                        <div class="input-with-button">
+                            <input type="text" id="obsList" value="site_obs.list">
+                            <button type="button" id="viewSelectMap" class="map-btn">From Map</button>
+                        </div>
                         <div class="hint">'all' or site list file name</div>
                     </div>
                     <div class="field">
@@ -472,7 +567,7 @@
                     <div class="field">
                         <label for="l2s4obs">Name Option:</label>
                         <select id="l2s4obs">
-                            <option value="0">0: Long Name</option>
+                            <option value="0" selected>0: Long Name</option>
                             <option value="1">1: Short Name</option>
                             <option value="2">2: Long and Short Name</option>
                         </select>
@@ -535,9 +630,9 @@
                     <div class="field">
                         <label for="l2s4nav">Name Option:</label>
                         <select id="l2s4nav">
-                            <option value="0">0: Long Name</option>
+                            <option value="0" selected>0: Long Name</option>
                             <option value="1">1: Short Name</option>
-                            <option value="2" selected>2: Long and Short Name</option>
+                            <option value="2">2: Long and Short Name</option>
                         </select>
                     </div>
                 </div>
@@ -568,9 +663,9 @@
                     <div class="field">
                         <label for="l2s4oc">Name Option:</label>
                         <select id="l2s4oc">
-                            <option value="0">0: Long Name</option>
+                            <option value="0" selected>0: Long Name</option>
                             <option value="1">1: Short Name</option>
-                            <option value="2" selected>2: Long and Short Name</option>
+                            <option value="2">2: Long and Short Name</option>
                         </select>
                     </div>
                 </div>
@@ -601,9 +696,9 @@
                     <div class="field">
                         <label for="l2s4eop">Name Option:</label>
                         <select id="l2s4eop">
-                            <option value="0">0: Long Name</option>
+                            <option value="0" selected>0: Long Name</option>
                             <option value="1">1: Short Name</option>
-                            <option value="2" selected>2: Long and Short Name</option>
+                            <option value="2">2: Long and Short Name</option>
                         </select>
                     </div>
                 </div>
@@ -664,7 +759,7 @@
                 <h2>IGS Weekly SINEX</h2>
                 <div class="field">
                     <div class="switch-container">
-                        <input type="checkbox" id="getSnxActive" checked>
+                        <input type="checkbox" id="getSnxActive">
                         <label class="switch-label" for="getSnxActive">Download SINEX Data</label>
                     </div>
                 </div>
@@ -672,9 +767,9 @@
                     <div class="field">
                         <label for="l2s4snx">Name Option:</label>
                         <select id="l2s4snx">
-                            <option value="0">0: Long Name</option>
+                            <option value="0" selected>0: Long Name</option>
                             <option value="1">1: Short Name</option>
-                            <option value="2" selected>2: Long and Short Name</option>
+                            <option value="2">2: Long and Short Name</option>
                         </select>
                     </div>
                 </div>
@@ -697,9 +792,9 @@
                     <div class="field">
                         <label for="l2s4ion">Name Option:</label>
                         <select id="l2s4ion">
-                            <option value="0">0: Long Name</option>
+                            <option value="0" selected>0: Long Name</option>
                             <option value="1">1: Short Name</option>
-                            <option value="2" selected>2: Long and Short Name</option>
+                            <option value="2">2: Long and Short Name</option>
                         </select>
                     </div>
                 </div>
@@ -772,6 +867,25 @@
         <div id="messageBox" class="message-box"></div>
 
 
+        <!-- 地图模态对话框 -->
+        <!-- <div id="mapModal" class="modal" style="display: none;">
+            <div class="modal-content map-modal-content">
+                <div class="modal-header">
+                    <h3>GNSS Stations World Map</h3>
+                    <span class="close" id="closeMapModal">&times;</span>
+                </div>
+                <div class="modal-body map-container">
+                    <div id="stationMap">
+                        <img src="https://www.igs.org/wp-content/uploads/2019/08/network_map-1024x512.png"
+                            alt="IGS Network Map" style="width: 100%; height: auto;">
+                    </div>
+                    <p class="map-info">This map shows the global distribution of IGS/MGEX tracking stations.</p>
+                </div>
+            </div>
+        </div> -->
+
+
+
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 // Handle time settings
@@ -779,15 +893,15 @@
                 const timeInputs = document.getElementById('timeInputs');
                 const toggleDirSettingsBtn = document.getElementById('toggleDirSettings');
                 const advancedDirSettings = document.getElementById('advancedDirSettings');
-                const serverPort = 8081;
+                const serverPort = 8080;
 
                 toggleDirSettingsBtn.addEventListener('click', function () {
                     if (advancedDirSettings.classList.contains('hidden-section')) {
                         advancedDirSettings.classList.remove('hidden-section');
-                        toggleDirSettingsBtn.textContent = 'Hide Advanced Directory Settings';
+                        toggleDirSettingsBtn.textContent = '隐藏高级目录设置';
                     } else {
                         advancedDirSettings.classList.add('hidden-section');
-                        toggleDirSettingsBtn.textContent = 'Show Advanced Directory Settings';
+                        toggleDirSettingsBtn.textContent = '显示高级目录设置';
                     }
                 });
 
@@ -955,6 +1069,38 @@
                         });
                 }
 
+                // 处理目录结构函数
+                function processDirectoryStructure() {
+                    const mainDir = document.getElementById('mainDir').value;
+                    const obsDir = document.getElementById('obsDir').value;
+                    const navDir = document.getElementById('navDir').value;
+
+                    // 发送请求到服务器处理目录结构
+                    fetch(`http://localhost:${serverPort}/simplify-directory`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            mainDir: mainDir,
+                            obsDir: obsDir,
+                            navDir: navDir
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showMessage('Directory structure simplified successfully!', 'success');
+                            } else {
+                                showMessage('Error simplifying directory structure: ' + data.error, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            showMessage('Error connecting to server: ' + error.message, 'error');
+                        });
+                }
+
+
                 // Download button click handler
                 document.getElementById('downloadBtn').addEventListener('click', function () {
                     // 首先生成配置
@@ -962,6 +1108,7 @@
 
                     // 获取生成的配置内容
                     const configContent = document.getElementById('output').textContent;
+                    const simplifyDirStructure = document.getElementById('simplifyDirStructure').checked;
 
                     showMessage('Already sent config file to server, Check the console for progress', 'success');
 
@@ -971,12 +1118,16 @@
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ config: configContent })
+                        body: JSON.stringify({ config: configContent, simplifyDirStructure: simplifyDirStructure })
                     })
                         .then(response => response.json())
                         .then(data => {
                             if (!data.success) {
                                 showMessage('Error: ' + data.error, 'error');
+                            } else {
+                                if (simplifyDirStructure) {
+                                    processDirectoryStructure();
+                                }
                             }
                         })
                         .catch(error => {
@@ -990,53 +1141,59 @@
 
                     if (this.value === '1') {
                         timeInputs.innerHTML = `
-                        <div>
-                            <label for="year">Year:</label>
-                            <input type="number" id="year" value="2024">
-                        </div>
-                        <div>
-                            <label for="month">Month:</label>
-                            <input type="number" id="month" value="1">
-                        </div>
-                        <div>
-                            <label for="day">Day:</label>
-                            <input type="number" id="day" value="1">
-                        </div>
-                        <div>
-                            <label for="ndays">Number of Days:</label>
-                            <input type="number" id="ndays" value="1">
-                        </div>
-                    `;
+                            <div class="time-input-container">
+                                <div class="time-input-group">
+                                    <label for="year">Year:</label>
+                                    <input type="number" id="year" value="2024">
+                                </div>
+                                <div class="time-input-group">
+                                    <label for="month">Month:</label>
+                                    <input type="number" id="month" value="1" min="1" max="12">
+                                </div>
+                                <div class="time-input-group">
+                                    <label for="day">Day:</label>
+                                    <input type="number" id="day" value="1" min="1" max="31">
+                                </div>
+                                <div class="time-input-group">
+                                    <label for="ndays">Number of Days:</label>
+                                    <input type="number" id="ndays" value="1" min="1">
+                                </div>
+                            </div>
+                        `;
                     } else if (this.value === '2') {
                         timeInputs.innerHTML = `
-                        <div>
-                            <label for="year">Year:</label>
-                            <input type="number" id="year" value="2024">
-                        </div>
-                        <div>
-                            <label for="doy">DOY (Day of Year):</label>
-                            <input type="number" id="doy" value="1">
-                        </div>
-                        <div>
-                            <label for="ndays">Number of Days:</label>
-                            <input type="number" id="ndays" value="1">
-                        </div>
-                    `;
+                            <div class="time-input-container">
+                                <div class="time-input-group">
+                                    <label for="year">Year:</label>
+                                    <input type="number" id="year" value="2024">
+                                </div>
+                                <div class="time-input-group">
+                                    <label for="doy">DOY (Day of Year):</label>
+                                    <input type="number" id="doy" value="1" min="1" max="366">
+                                </div>
+                                <div class="time-input-group">
+                                    <label for="ndays">Number of Days:</label>
+                                    <input type="number" id="ndays" value="1" min="1">
+                                </div>
+                            </div>
+                        `;
                     } else if (this.value === '3') {
                         timeInputs.innerHTML = `
-                        <div>
-                            <label for="week">GPS Week:</label>
-                            <input type="number" id="week" value="2242">
-                        </div>
-                        <div>
-                            <label for="dow">Day of Week (0-6):</label>
-                            <input type="number" id="dow" value="0" min="0" max="6">
-                        </div>
-                        <div>
-                            <label for="ndays">Number of Days:</label>
-                            <input type="number" id="ndays" value="1">
-                        </div>
-                    `;
+                            <div class="time-input-container">
+                                <div class="time-input-group">
+                                    <label for="week">GPS Week:</label>
+                                    <input type="number" id="week" value="2242" min="0">
+                                </div>
+                                <div class="time-input-group">
+                                    <label for="dow">Day of Week (0-6):</label>
+                                    <input type="number" id="dow" value="0" min="0" max="6">
+                                </div>
+                                <div class="time-input-group">
+                                    <label for="ndays">Number of Days:</label>
+                                    <input type="number" id="ndays" value="1" min="1">
+                                </div>
+                            </div>
+                        `;
                     }
                 });
 
@@ -1220,6 +1377,57 @@
                     document.getElementById('output').textContent = config;
                 }
             });
+
+            document.getElementById('viewSelectMap').addEventListener('click', function () {
+                openMapModal();
+            });
+
+            function openMapModal() {
+                // 创建地图模态对话框
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content map-modal-content">
+                        <div class="modal-header">
+                            <h3>GNSS Stations World Map</h3>
+                            <span class="close">&times;</span>
+                        </div>
+                        <div class="modal-body map-container">
+                            <iframe src="stations.html" style="width: 100%; height: 100%; min-height: 500px; border: none; border-radius: 4px;"></iframe>
+                        </div>
+
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                // 关闭按钮事件
+                modal.querySelector('.close').addEventListener('click', function () {
+                    document.body.removeChild(modal);
+                });
+
+                // 点击模态框外部关闭
+                modal.addEventListener('click', function (event) {
+                    if (event.target === modal) {
+                        document.body.removeChild(modal);
+                    }
+                });
+            }
+
+
+            // // 关闭地图模态框
+            // document.getElementById('closeMapModal').addEventListener('click', function () {
+            //     const mapModal = document.getElementById('mapModal');
+            //     mapModal.style.display = 'none';
+            // });
+
+            // // 点击模态框外部关闭
+            // window.addEventListener('click', function (event) {
+            //     const mapModal = document.getElementById('mapModal');
+            //     if (event.target === mapModal) {
+            //         mapModal.style.display = 'none';
+            //     }
+            // });
+
         </script>
 </body>
 

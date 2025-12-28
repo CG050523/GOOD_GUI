@@ -43,6 +43,8 @@ python3 ./main.py
 
 如果使用者想使用自己环境变量里配置的，使用下列代码即可
 
+因为Windows硬盘分区的限制，路径访问无法越过不同的盘符，所以推荐直接粘贴路径
+
 ```bash
 cd bin_Win
 python3.exe .\main.py
@@ -50,17 +52,15 @@ python3.exe .\main.py
 
 ---
 
-:exclamation: ~~请注意，因为作者关于网络通信的知识有限，并没有对端口的占用做自动调整，所以有可能在运行后浏览器内会出现该端口忙的提示~~
+:exclamation: 请注意，因为作者关于网络通信的知识有限，并没有对端口的占用做自动调整，所以有可能在运行后浏览器内会出现该端口忙的提示
 
-~~可以点击重试，或者关闭例如代理软件等可能会占用8080端口的应用~~
-
-目前已经添加了端口占用检测和自动修改端口的功能，初步实现，并不是一个足够稳健的策略
+可以点击重试，或者关闭例如代理软件等可能会占用10000端口的应用
 
 ---
 
 :exclamation:使用时如果改变了main_dir，那么请确保当前目录下存在thirdparty文件夹以支持下载的完成
 
-​	 可以把thirdparty文件夹移动到指定的文件夹下，推荐直接移动整个bin_Linux/bin_Win文件夹到目标目录
+​	 可以把thirdparty文件夹移动到指定的文件夹下，推荐直接修改main_dir路径为bin_Win/bin_Linux的路径
 
 ---
 
@@ -70,11 +70,69 @@ python3.exe .\main.py
 <input type="text" id="mainDir" value="/home/sheep/文档/GOOD_GUI/bin_Linux">
 ```
 
-作者现在修改了main脚本的内容，现在启动时脚本会自动获取绝对路径并对上面的value属性值进行替换
+找到这行代码，修改value属性值，即可更改默认启动路径
 
 ---
 
-**:rocket:后期改进想法**
+:sparkles:添加了从地图上选取站点进行下载的功能，但是因为网络环境的问题，openstreet的底图是无法使用的，所以作者只能用天地图的底图代替
+
+天地图则是需要提供具体的token才能调用地图服务的，所以如果需要使用这个功能，需要使用者自行到天地图官网申请一个账号，然后填入自己的token来使用（`demo.html`文件内）
+
+```javascript
+<script type="text/javascript" src="http://api.tianditu.gov.cn/api?v=4.0&tk=在此替换为自己的天地图token"></script>
+```
+
+从地图中选取站点的示意图：
+
+<img src="./.assets/selectfrommap.png" alt="selectFromMap" style="zoom:75%;" />
+
+选取后点击`保存为site_obs.list`即可覆盖原本的site_obs.list文件
+
+:exclamation:显示的站点是从SINEX文件中提取的，所以尽管显示了这些站点，并不代表都能从当前选取的服务器中下载到
+
+如果需要添加一些自定义的站点，可以在`./thirdparty/station_coordinates.js`文件中按照格式添加站点信息即可
+
+```js
+["AB09", -168.062138889, 65.614972222] // "station_ID", lon(deg), lat(deg)
+```
+
+---
+
+添加了一个名为Simplify Directory Structure的Checkbox
+
+选定后可以简化obs和nav的文件路径，但因为是暴力移动的，所以忽略了日期这些信息
+
+简化前：
+
+```
+./obs
+└── 2024
+    └── 001
+        └── MGEX
+            └── daily
+                ├── abmf0010.24o
+                └── ABMF00GLP_R_20240010000_01D_30S_MO.rnx
+./nav
+└── 2024
+    └── 001
+        ├── BRDC00IGS_R_20240010000_01D_MN.rnx
+        └── brdm0010.24p
+```
+
+简化后：
+
+```
+./obs
+├── abmf0010.24o
+└── ABMF00GLP_R_20240010000_01D_30S_MO.rnx
+./nav
+├── BRDC00IGS_R_20240010000_01D_MN.rnx
+└── brdm0010.24p
+```
+
+---
+
+:rocket:***后期改进想法**
 
 1. wget本身对多线程下载的支持并不好，后续或许可以更改下载引擎为Aria2，不过这个的工作量比较大
 2. ...

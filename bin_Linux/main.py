@@ -11,6 +11,14 @@ import subprocess
 import tempfile
 import logging
 
+class Colors:
+    INFO = '\033[92m'  # Green
+    WARN = '\033[94m'  # Blue
+    ERROR = '\033[91m'  # Red
+    END = '\033[0m'  # Reset to normal
+
+
+
 # 设置日志
 def setup_logging():
     log_format = '%(asctime)s - %(levelname)s - %(message)s'
@@ -120,6 +128,7 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 import json
                 data = json.loads(post_data)
                 config_content = data.get('config', '')
+                simplify_dir_structure = data.get('simplifyDirStructure', False)
         
                 if not config_content:
                     self.send_error(400, 'Empty configuration')
@@ -149,7 +158,11 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_response(200)
                     self.send_header('Content-type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({'success': True}).encode())
+                    response_data = {
+                        'success': True,
+                        'simplifyRequested': simplify_dir_structure
+                    }
+                    self.wfile.write(json.dumps(response_data).encode())
 
                     # 实时读取并显示输出
                     def read_output(pipe, log_func):
@@ -193,6 +206,145 @@ class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode())
             return
 
+        elif path == '/simplify-directory':
+            try:
+                # 解析JSON数据
+                import json
+                data = json.loads(post_data)
+                main_dir = data.get('mainDir', '')
+                obs_dir = data.get('obsDir', '')
+                nav_dir = data.get('navDir', '')
+
+                if not main_dir or not obs_dir or not nav_dir:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'Missing directory information'}).encode())
+                    return
+                # 构建完整的观测目录路径
+                full_dir = []
+                full_obs_dir = os.path.join(main_dir, obs_dir)
+                full_nav_dir = os.path.join(main_dir, nav_dir)
+                full_dir.append(full_obs_dir)
+                full_dir.append(full_nav_dir)
+                moved_files = 0
+                counter = 1
+                removed_dirs = 0
+                if not os.path.exists(full_obs_dir):
+                    if not os.path.exists(full_nav_dir):
+                        self.send_response(404)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({'success': False, 'error': f'Directory {full_directory} does not exist'}).encode())
+                        return
+
+                for full_directory in full_dir:
+
+                    # 确保目录存在
+                    if not os.path.exists(full_directory):
+                        continue
+
+                
+                    # 递归查找文件
+                    all_files = []
+                    for root, dirs, files in os.walk(full_directory):
+                        if root != full_directory:  # 跳过根目录
+                            for file in files:
+                                file_path = os.path.join(root, file)
+                                all_files.append(file_path)
+                
+                            # 移动所有文件到观测目录根目录
+
+                    for file_path in all_files:
+                        file_name = os.path.basename(file_path)
+                        new_path = os.path.join(full_directory, file_name)
+                
+                        # 如果目标路径已存在同名文件，添加后缀
+
+                        while os.path.exists(new_path):
+                            base, ext = os.path.splitext(file_name)
+                            new_path = os.path.join(full_directory, f"{base}_{counter}{ext}")
+                            counter += 1
+                
+                        import shutil
+                        shutil.move(file_path, new_path)
+                        moved_files += 1
+            
+                    # 删除空目录（从下往上删除）
+
+                    for root, dirs, files in os.walk(full_directory, topdown=False):
+                        if root != full_directory:
+                            if not os.listdir(root):  # 检查目录是否为空
+                                os.rmdir(root)
+                                removed_dirs += 1
+                # 发送成功响应
+                print(Colors.INFO + f"INFO: Already Delete {removed_dirs} dirs" + Colors.END)
+                print(Colors.INFO + f"INFO: Renamed {counter - 1} files" + Colors.END)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True, 
+                    'message': f'Moved {moved_files} files and removed {removed_dirs} directories'
+                }).encode())
+            
+            except Exception as e:
+                import traceback
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False, 
+                    'error': str(e),
+                    'traceback': traceback.format_exc()
+                }).encode())
+            return
+        elif path == '/save-stations':
+            try:
+                import json
+                data = json.loads(post_data)
+                stations = data.get('stations', [])
+                count = data.get('count', 0)
+        
+                if not stations:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': False, 'error': 'No stations data provided'}).encode())
+                    return
+                
+                 # 保存为site_obs.list,仅站点代码
+                site_list_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'site_obs.list')
+                with open(site_list_file, 'w') as f:
+                    for station in stations:
+                        f.write(f"{station['code']}\n")
+        
+                logger.info(f"Saved station list to {site_list_file}")
+        
+                # 发送成功响应
+                print(Colors.INFO + f"INFO: Already Save {count} Stations In {site_list_file} " + Colors.END)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'message': f'Successfully saved {count} stations',
+                    'files': ['selected_stations.json', 'site_obs.list']
+                }).encode())
+
+            except Exception as e:
+                import traceback
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False, 
+                    'error': str(e),
+                    'traceback': traceback.format_exc()
+                }).encode())
+            return
+
+        self.send_error(404, 'Not Found')
 
     
 def is_port_available(port):
@@ -208,17 +360,20 @@ def run_server(port=8080):
     # 检查端口是否可用，如果不可用则尝试其他端口
     original_port = port
     while not is_port_available(port) and port < original_port + 100:
-        print(f"Port {port} is in use, trying port {port + 1}")
+        print(Colors.WARN + f"WARN: Port {port} is in use, trying port {port + 1}" + Colors.END)
         port += 1
     
     if port >= original_port + 100:
-        print(f"Could not find an available port in range {original_port}-{original_port + 99}")
+        print(Colors.WARN + f"WARN: Could not find an available port in range {original_port}-{original_port + 99}" + Colors.END)
         return
 
     # 读取 HTML 文件
     try:
         with open('config_generator.html', 'r', encoding='utf-8') as file:
             html_content = file.read()
+
+        with open('stations.html', 'r', encoding='utf-8') as file_map:
+            map_html = file_map.read()
         
         # 获取当前脚本的目录路径
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -231,27 +386,32 @@ def run_server(port=8080):
         # 2. 替换端口号 - 使用正则表达式查找 serverPort 变量定义
         pattern_port = r'(const\s+serverPort\s*=\s*)(\d+)'
         html_content = re.sub(pattern_port, lambda m: m.group(1) + str(port), html_content)
-        
+        map_pattern_port = r'(var\s+serverPort\s*=\s*)(\d+)'
+        map_html = re.sub(map_pattern_port, lambda m: m.group(1) + str(port), map_html)
+
         # 写入修改后的内容
         with open('config_generator.html', 'w', encoding='utf-8') as file:
             file.write(html_content)
+
+        with open('stations.html', 'w', encoding='utf-8') as file_map:
+            file_map.write(map_html)        
         
-        print(f"Change the main_dir into {script_dir}")
-        print(f"Change the port into {port}")
+        print(Colors.INFO + f"INFO: Change the main_dir into {script_dir}" + Colors.END)
+        print(Colors.INFO + f"INFO: Change the port into {port}" + Colors.END)
         handler = CORSHTTPRequestHandler
-        print(f"Server running at http://localhost:{port}")
+        print(Colors.INFO + f"INFO: Server running at http://localhost:{port}" + Colors.END)
         # 启动浏览器
         webbrowser.open(f"http://localhost:{port}")
         with socketserver.TCPServer(("", port), handler) as httpd:
             httpd.serve_forever()
     except FileNotFoundError:
-        print("Error: config_generator.html file not found")
+        print(Colors.ERROR + "ERROR: config_generator.html file not found" + Colors.END)
         return
     except PermissionError:
-        print("Error: Permission denied when accessing config_generator.html")
+        print(Colors.ERROR + "ERROR: Permission denied when accessing config_generator.html" + Colors.END)
         return
     except Exception as e:
-        print(f"Error processing HTML file: {str(e)}")
+        print(Colors.ERROR + f"ERROR processing HTML file: {str(e)}" + Colors.END)
         return
 
 
@@ -263,9 +423,9 @@ if __name__ == "__main__":
     try:
         run_server()
     except KeyboardInterrupt:
-        print("\nServer shutdown requested by user")
+        print(Colors.INFO + "\nINFO: Server shutdown requested by user" + Colors.END)
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(Colors.ERROR + f"ERROR: An unexpected error occurred: {e}" + Colors.END)
     finally:
-        print("Server has been shut down")
+        print(Colors.INFO + "INFO: Server has been shut down" + Colors.END)
 
