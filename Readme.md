@@ -76,7 +76,7 @@ python3.exe .\main.py
 
 :sparkles:添加了从地图上选取站点进行下载的功能，但是因为网络环境的问题，openstreet的底图是无法使用的，所以作者只能用天地图的底图代替
 
-天地图则是需要提供具体的token才能调用地图服务的，所以如果需要使用这个功能，需要使用者自行到天地图官网申请一个账号，然后填入自己的token来使用（`demo.html`文件内）
+天地图则是需要提供具体的token才能调用地图服务的，所以如果需要使用这个功能，需要使用者自行到天地图官网申请一个账号，然后填入自己的token来使用（`stations.html`文件内）
 
 ```javascript
 <script type="text/javascript" src="http://api.tianditu.gov.cn/api?v=4.0&tk=在此替换为自己的天地图token"></script>
